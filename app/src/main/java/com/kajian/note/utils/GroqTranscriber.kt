@@ -96,7 +96,9 @@ object GroqTranscriber {
             val rawText = json.optString("text", "").trim()
 
             // Apply kamus koreksi (sama seperti Mode Langsung STT)
-            val text = DictionaryManager(ctx).correct(rawText)
+            val corrected = DictionaryManager(ctx).correct(rawText)
+            // Apply Arab post-processor (fonetik → tulisan Arab asli)
+            val text = ArabicPostProcessor.process(corrected)
 
             Log.d(TAG, "Groq result (raw): '$rawText'")
             Log.d(TAG, "Groq result (corrected): '$text'")

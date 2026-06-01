@@ -67,54 +67,151 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
         prefs = PreferencesManager(requireContext())
         speech = SpeechHelper(requireContext(), this)
 
-        setupLanguage()
-        setupAudioMode()
-        setupRecordModeToggle()
+        setupChips()
+        setupInfoButtons()
         setupRecordButton()
         setupSaveAndClear()
         setupTranscriptEdit()
         observeVM()
     }
 
-    // ── Record Mode ────────────────────────────────────────────────────────
+    // ── Chip Selector UI ───────────────────────────────────────────────────
 
-    private fun setupRecordModeToggle() {
-        recordMode = if (prefs.getRecordMode() == "REKAM") RecordMode.REKAM else RecordMode.LANGSUNG
-        updateRecordModeUI()
-        b.btnRecordMode.setOnClickListener {
-            recordMode = if (recordMode == RecordMode.LANGSUNG) RecordMode.REKAM else RecordMode.LANGSUNG
-            prefs.setRecordMode(recordMode.name)
-            updateRecordModeUI()
+    private fun setupChips() {
+        // Restore saved state
+        val savedLang = prefs.getRecordingLanguage()
+        val savedMode = prefs.getRecordMode()
+        val savedAudio = prefs.getAudioMode()
+        val hasGroqKey = GroqTranscriber.hasApiKey(requireContext())
+
+        // Init recordMode
+        recordMode = when (savedMode) {
+            "REKAM" -> RecordMode.REKAM
+            "STT"   -> RecordMode.LANGSUNG
+            else    -> if (hasGroqKey) RecordMode.LANGSUNG else RecordMode.LANGSUNG
         }
-        // Info buttons (#1)
-        b.btnInfoMode.setOnClickListener {
-            val hasGroq = GroqTranscriber.hasApiKey(requireContext())
-            val msg = if (hasGroq)
-                "🎙 Langsung (Groq): Rekam + kirim ke Groq Whisper tiap ~30 detik. Akurat untuk bicara cepat & istilah Arab.\n\n🔴 Rekam dulu: Rekam audio penuh → transkripsi setelah selesai. Cocok untuk kajian panjang."
-            else
-                "🎙 Langsung (STT): Transkripsi real-time via Android STT. Teks muncul saat bicara.\n\n🔴 Rekam dulu: Rekam audio penuh → transkripsi setelah selesai.\n\n💡 Set Groq API Key di Settings untuk akurasi lebih baik."
-            showInfoDialog("Mode Rekam", msg)
+
+        // Set initial chip states
+        setLangChip(savedLang)
+        setModeChip(savedMode, hasGroqKey)
+        setAudioChip(savedAudio)
+
+        // Apply initial language to speech engine
+        val resolved = if (savedLang == "auto")
+            LanguageDetector.detectDeviceLanguage(requireContext()) else savedLang
+        speech?.currentLanguage = resolved
+        vm.setLanguage(resolved)
+
+        // Language chips
+        b.chipLangId.setOnClickListener   { selectLang("id-ID") }
+        b.chipLangEn.setOnClickListener   { selectLang("en-US") }
+        b.chipLangAr.setOnClickListener   { selectLang("ar-SA") }
+        b.chipLangAuto.setOnClickListener { selectLang("auto") }
+
+        // Mode chips
+        b.chipModeGroq.setOnClickListener  { selectMode("GROQ") }
+        b.chipModeStt.setOnClickListener   { selectMode("STT") }
+        b.chipModeRekam.setOnClickListener { selectMode("REKAM") }
+
+        // Audio chips
+        b.chipAudioNormal.setOnClickListener  { selectAudio("NORMAL") }
+        b.chipAudioSpeaker.setOnClickListener { selectAudio("SPEAKER") }
+    }
+
+    private fun selectLang(langCode: String) {
+        prefs.setRecordingLanguage(langCode)
+        val resolved = if (langCode == "auto")
+            LanguageDetector.detectDeviceLanguage(requireContext()) else langCode
+        speech?.currentLanguage = resolved
+        vm.setLanguage(resolved)
+        setLangChip(langCode)
+    }
+
+    private fun selectMode(mode: String) {
+        prefs.setRecordMode(mode)
+        recordMode = when (mode) {
+            "REKAM" -> RecordMode.REKAM
+            else    -> RecordMode.LANGSUNG
         }
-        b.btnInfoLang.setOnClickListener {
-            showInfoDialog("Bahasa Transkripsi",
-                "Pilih bahasa yang digunakan saat kajian.\n\n" +
-                "🌐 Auto Detect: Whisper otomatis deteksi bahasa termasuk campuran Indonesia-Arab.\n\n" +
-                "🇮🇩 Indonesia: Dioptimalkan untuk konten kajian Islam dalam Bahasa Indonesia.\n\n" +
-                "🌙 Arab: Untuk kajian full Bahasa Arab. Groq Whisper akan tulis teks Arab asli.")
-        }
-        b.btnInfoAudio.setOnClickListener {
-            showInfoDialog("Sumber Audio",
-                "🎤 Normal: Rekam suara langsung dari mikrofon HP. Cocok untuk bicara ke HP.\n\n" +
-                "🔊 Speaker: Mode sensitivitas tinggi untuk merekam suara dari speaker/proyektor, cocok untuk kajian di masjid atau ruangan besar.")
+        val hasGroqKey = GroqTranscriber.hasApiKey(requireContext())
+        setModeChip(mode, hasGroqKey)
+    }
+
+    private fun selectAudio(mode: String) {
+        val sens = prefs.getMicSensitivity()
+        val audioMode = if (mode == "SPEAKER") AudioSourceManager.Mode.SPEAKER
+                        else AudioSourceManager.Mode.NORMAL
+        speech?.audioConfig = AudioSourceManager.buildConfig(audioMode, sens)
+        prefs.setAudioMode(mode)
+        setAudioChip(mode)
+    }
+
+    private fun setLangChip(savedLang: String) {
+        val allChips = listOf(b.chipLangId, b.chipLangEn, b.chipLangAr, b.chipLangAuto)
+        allChips.forEach { setChipInactive(it) }
+        when (savedLang) {
+            "id-ID" -> setChipActive(b.chipLangId)
+            "en-US" -> setChipActive(b.chipLangEn)
+            "ar-SA" -> setChipActive(b.chipLangAr)
+            "auto"  -> setChipActive(b.chipLangAuto)
+            else    -> setChipActive(b.chipLangId)
         }
     }
 
-    private fun updateRecordModeUI() {
-        val hasGroqKey = GroqTranscriber.hasApiKey(requireContext())
-        if (recordMode == RecordMode.REKAM) {
-            b.tvRecordModeLabel.text = "Rekam dulu"
-        } else {
-            b.tvRecordModeLabel.text = if (hasGroqKey) "Langsung (Groq)" else "Langsung (STT)"
+    private fun setModeChip(mode: String, hasGroqKey: Boolean) {
+        val allChips = listOf(b.chipModeGroq, b.chipModeStt, b.chipModeRekam)
+        allChips.forEach { setChipInactive(it) }
+        when (mode) {
+            "REKAM" -> setChipActive(b.chipModeRekam)
+            "STT"   -> setChipActive(b.chipModeStt)
+            else    -> if (hasGroqKey) setChipActive(b.chipModeGroq)
+                       else setChipActive(b.chipModeStt)
+        }
+        // Sembunyikan chip Groq jika tidak ada key
+        b.chipModeGroq.visibility = if (hasGroqKey) View.VISIBLE else View.GONE
+    }
+
+    private fun setAudioChip(mode: String) {
+        val allChips = listOf(b.chipAudioNormal, b.chipAudioSpeaker)
+        allChips.forEach { setChipInactive(it) }
+        if (mode == "SPEAKER") setChipActive(b.chipAudioSpeaker)
+        else setChipActive(b.chipAudioNormal)
+    }
+
+    private fun setChipActive(chip: android.widget.TextView) {
+        chip.setBackgroundResource(R.drawable.bg_chip_active)
+        chip.setTextColor(resources.getColor(R.color.primary_green, null))
+    }
+
+    private fun setChipInactive(chip: android.widget.TextView) {
+        chip.setBackgroundResource(R.drawable.bg_chip_inactive)
+        chip.setTextColor(0xFF666666.toInt())
+    }
+
+    private fun setupInfoButtons() {
+        b.btnInfoLang.setOnClickListener {
+            showInfoDialog("Bahasa Transkripsi",
+                "🌐 Auto: Whisper otomatis deteksi bahasa termasuk campuran Indonesia-Arab.\n\n" +
+                "🇮🇩 Indonesia: Optimal untuk kajian Islam Bahasa Indonesia.\n\n" +
+                "🌙 Arab: Untuk kajian full Bahasa Arab.\n\n" +
+                "💡 Tip: Pakai Auto jika kajian campur Arab-Indonesia.")
+        }
+        b.btnInfoMode.setOnClickListener {
+            val hasGroq = GroqTranscriber.hasApiKey(requireContext())
+            showInfoDialog("Mode Rekam",
+                if (hasGroq)
+                    "⚡ Langsung (Groq): Rekam + kirim ke Groq Whisper tiap ~25 detik. Paling akurat, support Arab otomatis.\n\n" +
+                    "🎤 Langsung (STT): Real-time via Android STT. Teks muncul langsung tapi kurang akurat untuk Arab.\n\n" +
+                    "🔴 Rekam dulu: Rekam audio penuh → transkripsi setelah selesai. Cocok untuk kajian panjang."
+                else
+                    "🎤 Langsung (STT): Real-time via Android STT.\n\n" +
+                    "🔴 Rekam dulu: Rekam audio penuh → transkripsi setelah selesai.\n\n" +
+                    "💡 Set Groq API Key di Settings untuk mode Langsung (Groq) yang lebih akurat.")
+        }
+        b.btnInfoAudio.setOnClickListener {
+            showInfoDialog("Sumber Audio",
+                "🎤 Normal: Mikrofon HP langsung. Cocok untuk bicara dekat dengan HP.\n\n" +
+                "📢 Speaker: Sensitivitas tinggi untuk merekam dari speaker/proyektor. Cocok di masjid atau ruangan besar.")
         }
     }
 
@@ -124,84 +221,6 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
             .setMessage(message)
             .setPositiveButton("OK", null)
             .show()
-    }
-
-    // ── Language ───────────────────────────────────────────────────────────
-
-    private fun setupLanguage() {
-        val saved = prefs.getRecordingLanguage()
-        val resolved = if (saved == "auto")
-            LanguageDetector.detectDeviceLanguage(requireContext()) else saved
-        speech?.currentLanguage = resolved
-        vm.setLanguage(resolved)
-        updateLangDisplay(resolved)
-        b.btnLanguage.setOnClickListener { showLanguagePicker() }
-    }
-
-    private fun updateLangDisplay(lang: String) {
-        // Tampilkan "Auto Detect" jika auto, bukan bahasa device
-        val savedPref = prefs.getRecordingLanguage()
-        b.tvCurrentLang.text = if (savedPref == "auto") "🌐 Auto Detect"
-                               else LanguageDetector.getDisplayName(lang)
-    }
-
-    private fun showLanguagePicker() {
-        val langs = PreferencesManager.RECORDING_LANGUAGES
-        val names = langs.map { it.second }.toTypedArray()
-        val cur = langs.indexOfFirst { it.first == prefs.getRecordingLanguage() }.coerceAtLeast(0)
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(getString(R.string.lang_audio))
-            .setSingleChoiceItems(names as Array<CharSequence>, cur) { dlg, i ->
-                val sel = langs[i]
-                val code = if (sel.first == "auto")
-                    LanguageDetector.detectDeviceLanguage(requireContext()) else sel.first
-                prefs.setRecordingLanguage(sel.first)
-                speech?.currentLanguage = code
-                vm.setLanguage(code)
-                updateLangDisplay(code)
-                updateRecordModeUI()
-                dlg.dismiss()
-            }
-            .setNegativeButton(android.R.string.cancel, null).show()
-    }
-
-    // ── Audio Mode ─────────────────────────────────────────────────────────
-
-    private fun setupAudioMode() {
-        val savedMode = prefs.getAudioMode()
-        val savedSens = prefs.getMicSensitivity()
-        val mode = if (savedMode == AudioSourceManager.Mode.SPEAKER.name)
-            AudioSourceManager.Mode.SPEAKER else AudioSourceManager.Mode.NORMAL
-        speech?.audioConfig = AudioSourceManager.buildConfig(mode, savedSens)
-        updateAudioModeUI()
-        b.btnAudioMode.setOnClickListener { showAudioModePicker() }
-    }
-
-    private fun updateAudioModeUI() {
-        val config = speech?.audioConfig ?: AudioSourceManager.NORMAL_CONFIG
-        b.tvAudioModeLabel.text = config.description
-        b.tvAudioModeLabel.text = config.tip
-        b.btnAudioMode.text = if (config.mode == AudioSourceManager.Mode.SPEAKER)
-            "🔊 Speaker" else "🎤 Normal"
-        b.tvAudioModeLabel.text = "Sens: ${prefs.getMicSensitivity()}/5"
-    }
-
-    private fun showAudioModePicker() {
-        val modes = listOf(AudioSourceManager.NORMAL_CONFIG, AudioSourceManager.SPEAKER_CONFIG)
-        val current = speech?.audioConfig?.mode ?: AudioSourceManager.Mode.NORMAL
-        val currentIdx = modes.indexOfFirst { it.mode == current }
-        val names: Array<CharSequence> = modes.map { "${it.description}\n${it.tip}" }.toTypedArray()
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("🎚️ Mode Audio")
-            .setSingleChoiceItems(names, currentIdx) { dlg, which ->
-                val selected = modes[which]
-                val sensitivity = prefs.getMicSensitivity()
-                speech?.audioConfig = AudioSourceManager.buildConfig(selected.mode, sensitivity)
-                prefs.setAudioMode(selected.mode.name)
-                updateAudioModeUI()
-                dlg.dismiss()
-            }
-            .setNegativeButton(android.R.string.cancel, null).show()
     }
 
     // ── Record Button ──────────────────────────────────────────────────────
@@ -238,40 +257,10 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
 
         val lang = vm.language.value ?: LanguageDetector.detectDeviceLanguage(requireContext())
         val hasGroqKey = GroqTranscriber.hasApiKey(requireContext())
+        val savedMode = prefs.getRecordMode()
 
-        when (recordMode) {
-            RecordMode.LANGSUNG -> {
-                b.etTranscript.setText("")
-                speech?.clearAll()
-                if (hasGroqKey) {
-                    // Mode Langsung Groq — akurat untuk bicara cepat
-                    useContinuousGroq = true
-                    b.tvPartial.text = "🎙️ Merekam... teks muncul tiap ~30 detik"
-                    continuousRec = ContinuousGroqRecorder(
-                        ctx       = requireContext(),
-                        language  = lang,
-                        onPartial = { chunkText ->
-                            appendedChunks.append(" ").append(chunkText)
-                            val full = appendedChunks.toString().trim()
-                            activity?.runOnUiThread {
-                                b.etTranscript.setText(full)
-                                b.etTranscript.setSelection(full.length)
-                                b.tvPartial.text = "✅ Chunk terakhir: $chunkText"
-                                vm.updateText(full)
-                            }
-                        },
-                        onAmplitude = { rms ->
-                            activity?.runOnUiThread { b.waveformView.setLevel(rms) }
-                        }
-                    )
-                    continuousRec?.start(requireContext().cacheDir)
-                } else {
-                    // Fallback ke Android SpeechRecognizer
-                    useContinuousGroq = false
-                    speech?.start(lang)
-                }
-            }
-            RecordMode.REKAM -> {
+        when {
+            savedMode == "REKAM" -> {
                 useContinuousGroq = false
                 b.etTranscript.setText("🔴 Merekam audio...\nTranskripsi akan diproses setelah recording selesai.")
                 b.tvPartial.text = "🔴 Merekam..."
@@ -279,6 +268,34 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
                     activity?.runOnUiThread { b.waveformView.setLevel(rms) }
                 }
                 audioRec?.start(requireContext().cacheDir)
+            }
+            hasGroqKey && savedMode != "STT" -> {
+                // Mode Langsung Groq
+                useContinuousGroq = true
+                b.tvPartial.text = "🎙️ Merekam... teks muncul tiap ~25 detik"
+                continuousRec = ContinuousGroqRecorder(
+                    ctx       = requireContext(),
+                    language  = lang,
+                    onPartial = { chunkText ->
+                        appendedChunks.append(" ").append(chunkText)
+                        val full = appendedChunks.toString().trim()
+                        activity?.runOnUiThread {
+                            b.etTranscript.setText(full)
+                            b.etTranscript.setSelection(full.length)
+                            b.tvPartial.text = "✅ Chunk terakhir: $chunkText"
+                            vm.updateText(full)
+                        }
+                    },
+                    onAmplitude = { rms ->
+                        activity?.runOnUiThread { b.waveformView.setLevel(rms) }
+                    }
+                )
+                continuousRec?.start(requireContext().cacheDir)
+            }
+            else -> {
+                // Mode Langsung STT (fallback)
+                useContinuousGroq = false
+                speech?.start(lang)
             }
         }
     }
@@ -297,9 +314,10 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
         b.tvPartial.isVisible = false
 
         val dur = System.currentTimeMillis() - recordingStartMs
+        val savedMode = prefs.getRecordMode()
 
-        when (recordMode) {
-            RecordMode.LANGSUNG -> {
+        when {
+            savedMode != "REKAM" -> {
                 if (useContinuousGroq) {
                     b.tvStatus.text = "⏳ Memproses sisa audio..."
                     b.fabRecord.isEnabled = false
@@ -319,15 +337,15 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
                     b.btnSave.isEnabled = b.etTranscript.text?.isNotBlank() == true
                 }
             }
-            RecordMode.REKAM -> {
-                val lang = vm.language.value ?: LanguageDetector.detectDeviceLanguage(requireContext())
+            else -> {
+                val lang2 = vm.language.value ?: LanguageDetector.detectDeviceLanguage(requireContext())
                 b.tvStatus.text = "Menyimpan rekaman..."
                 audioRec?.stop { wavFile ->
                     audioRec?.destroy(); audioRec = null
                     if (wavFile != null) {
                         startActivity(android.content.Intent(requireContext(), TranscribeActivity::class.java).apply {
                             putExtra(TranscribeActivity.EXTRA_WAV_PATH, wavFile.absolutePath)
-                            putExtra(TranscribeActivity.EXTRA_LANGUAGE, lang)
+                            putExtra(TranscribeActivity.EXTRA_LANGUAGE, lang2)
                             putExtra(TranscribeActivity.EXTRA_DURATION_MS, dur)
                         })
                     } else {

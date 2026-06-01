@@ -166,8 +166,10 @@ class ContinuousGroqRecorder(
 
             if (result.isNotBlank() && !result.startsWith("ERROR")) {
                 val trimmed = result.trim()
+                // Apply Arab post-processor
+                val processed = ArabicPostProcessor.process(trimmed)
                 // Hindari duplikasi dari overlap
-                val deduped = deduplicateOverlap(fullText.toString(), trimmed)
+                val deduped = deduplicateOverlap(fullText.toString(), processed)
                 fullText.append(" ").append(deduped)
                 withContext(Dispatchers.Main) { onPartial(deduped) }
                 Log.d(TAG, "Chunk result: '$deduped'")
