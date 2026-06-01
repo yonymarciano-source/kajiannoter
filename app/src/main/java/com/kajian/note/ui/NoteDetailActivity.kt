@@ -32,7 +32,10 @@ import java.io.File
 
 class NoteDetailActivity : AppCompatActivity() {
 
-    companion object { const val EXTRA_ID = "note_id" }
+    companion object {
+        const val EXTRA_ID = "note_id"
+        private const val REQ_SUMMARY_EDIT = 1001
+    }
 
     private lateinit var b: ActivityNoteDetailBinding
     private val vm: RecordViewModel by viewModels()
@@ -364,8 +367,8 @@ class NoteDetailActivity : AppCompatActivity() {
             if (entries.isEmpty()) return
 
             // Cari entry terdekat dengan posisi audio
-            val target = entries.filter { it.timestampMs > 0 }
-                .lastOrNull { it.timestampMs <= posMs } ?: entries.firstOrNull() ?: return
+            val target = entries.filter { it.timeMs > 0 }
+                .lastOrNull { it.timeMs <= posMs } ?: entries.firstOrNull() ?: return
 
             // Rebuild text dengan highlight pada entry target
             val ssb = buildRichTranscriptHighlighted(entries, n, target)
@@ -589,9 +592,5 @@ class NoteDetailActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         player.release()
-    }
-
-    companion object {
-        private const val REQ_SUMMARY_EDIT = 1001
     }
 }

@@ -10,6 +10,7 @@ import android.view.*
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.kajian.note.R
 import com.kajian.note.databinding.ActivitySummaryEditorBinding
 
 /**
