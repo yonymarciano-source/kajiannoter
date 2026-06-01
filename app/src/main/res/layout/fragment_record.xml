@@ -211,7 +211,7 @@
             android:background="@null" android:padding="8dp"
             android:textColor="@color/text_primary" android:textSize="15sp"
             android:lineSpacingExtra="6dp" android:inputType="textMultiLine|textCapSentences"
-            android:hint="Transkripsi akan muncul di sini..." android:hintTextColor="@color/text_tertiary"/>
+            android:hint="Transkripsi akan muncul di sini..." android:textColorHint="@color/text_tertiary"/>
         <TextView android:id="@+id/tvWordCount"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="0 kata" android:textColor="@color/text_tertiary"
