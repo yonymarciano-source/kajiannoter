@@ -54,9 +54,25 @@ object MindmapGenerator {
         val apiKey = GroqTranscriber.getApiKey(ctx)
         if (apiKey.isBlank()) return@withContext Result.failure(Exception("NO_KEY"))
 
+        // Resolve bahasa dari teks jika auto
+        val resolvedLang = when {
+            detectedLang.startsWith("id") -> "id"
+            detectedLang.startsWith("ar") -> "ar"
+            detectedLang.startsWith("en") -> "en"
+            else -> {
+                val sample = plainText.take(300)
+                val arabCount = sample.count { it in '\u0600'..'\u06FF' }
+                val latinCount = sample.count { it in 'a'..'z' || it in 'A'..'Z' }
+                if (arabCount > latinCount * 0.3) "ar"
+                else if (Regex("\\b(dan|yang|dengan|untuk|dari|ini|itu|adalah|Allah)\\b")
+                    .containsMatchIn(sample.lowercase())) "id"
+                else "id"
+            }
+        }
+
         try {
-            val systemPrompt = buildSystemPrompt(detectedLang)
-            val userPrompt   = buildUserPrompt(title, plainText, detectedLang)
+            val systemPrompt = buildSystemPrompt(resolvedLang)
+            val userPrompt   = buildUserPrompt(title, plainText, resolvedLang)
 
             val requestBody = JSONObject().apply {
                 put("model", MODEL)

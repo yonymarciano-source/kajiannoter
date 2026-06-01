@@ -71,7 +71,6 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
         setupAudioMode()
         setupRecordModeToggle()
         setupRecordButton()
-        setupSpeakerControls()
         setupSaveAndClear()
         setupTranscriptEdit()
         observeVM()
@@ -235,8 +234,6 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
         b.waveformView.isVisible = true
         b.tvPartial.isVisible = true
         b.cardHint.isVisible = false
-        b.cardSpeaker.isVisible = true
-        updateSpeakerDisplay()
         startPulse()
 
         val lang = vm.language.value ?: LanguageDetector.detectDeviceLanguage(requireContext())
@@ -340,66 +337,6 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
                 }
             }
         }
-    }
-
-    // ── Speaker ────────────────────────────────────────────────────────────
-
-    private fun setupSpeakerControls() {
-        b.btnNextSpeaker.setOnClickListener {
-            speech?.nextSpeaker()
-            val text = b.etTranscript.text?.toString() ?: ""
-            b.etTranscript.setText(text + "\n\n▶ ${speech?.currentSpeakerName()}\n")
-            b.etTranscript.setSelection(b.etTranscript.length())
-            updateSpeakerDisplay(); flashSpeakerPanel()
-        }
-        b.btnPrevSpeaker.setOnClickListener {
-            if ((speech?.currentSpeakerIndex ?: 0) > 0) {
-                speech?.prevSpeaker()
-                val text = b.etTranscript.text?.toString() ?: ""
-                b.etTranscript.setText(text + "\n\n◀ ${speech?.currentSpeakerName()}\n")
-                b.etTranscript.setSelection(b.etTranscript.length())
-                updateSpeakerDisplay(); flashSpeakerPanel()
-            }
-        }
-        b.btnNameSpeaker.setOnClickListener { showNameDialog() }
-        b.tvSpeakerName.setOnLongClickListener { showNameDialog(); true }
-    }
-
-    private fun updateSpeakerDisplay() {
-        val idx  = speech?.currentSpeakerIndex ?: 0
-        val name = speech?.currentSpeakerName() ?: "Speaker A"
-        val lbl  = TranscriptEntry.SPEAKER_LABELS.getOrElse(idx) { "${idx + 1}" }
-        val col  = TranscriptEntry.SPEAKER_COLORS.getOrElse(idx) { TranscriptEntry.SPEAKER_COLORS[0] }
-        b.tvSpeakerLabel.text = lbl
-        b.tvSpeakerName.text  = name
-        b.tvSpeakerLabel.setTextColor(col)
-        b.tvSpeakerName.setTextColor(col)
-        b.btnPrevSpeaker.alpha     = if (idx == 0) 0.3f else 1f
-        b.btnPrevSpeaker.isEnabled = idx > 0
-        vm.updateSpeaker(name)
-    }
-
-    private fun flashSpeakerPanel() {
-        ObjectAnimator.ofFloat(b.cardSpeaker, "alpha", 0.3f, 1f).apply { duration = 300 }.start()
-    }
-
-    private fun showNameDialog() {
-        val idx = speech?.currentSpeakerIndex ?: 0
-        val cur = speech?.speakerName(idx) ?: TranscriptEntry.defaultName(idx)
-        val lbl = TranscriptEntry.SPEAKER_LABELS.getOrElse(idx) { "${idx + 1}" }
-        val input = EditText(requireContext()).apply {
-            setText(cur); selectAll(); setPadding(48, 24, 48, 24)
-            hint = "Contoh: Ustad Ahmad"
-        }
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("✏️ Nama Speaker $lbl")
-            .setView(input)
-            .setPositiveButton(getString(android.R.string.ok)) { _, _ ->
-                val name = input.text.toString().trim().ifBlank { cur }
-                speech?.setSpeakerName(idx, name)
-                updateSpeakerDisplay()
-            }
-            .setNegativeButton(android.R.string.cancel, null).show()
     }
 
     // ── Save / Clear ───────────────────────────────────────────────────────

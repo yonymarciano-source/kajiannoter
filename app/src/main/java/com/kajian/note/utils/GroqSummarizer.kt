@@ -43,8 +43,9 @@ object GroqSummarizer {
         }
 
         try {
-            val systemPrompt = buildSystemPrompt(detectedLang)
-            val userPrompt   = buildUserPrompt(title, plainText, detectedLang)
+            val resolvedLang = resolveLang(detectedLang, plainText)
+            val systemPrompt = buildSystemPrompt(resolvedLang)
+            val userPrompt   = buildUserPrompt(title, plainText, resolvedLang)
 
             val requestBody = JSONObject().apply {
                 put("model", MODEL)
@@ -102,6 +103,39 @@ object GroqSummarizer {
     }
 
     // ── Prompt builders ───────────────────────────────────────────────────────
+
+    /**
+     * Resolve bahasa yang sebenarnya dari kode language note.
+     * Kalau auto/tidak dikenal, deteksi dari karakter teks transkripsi.
+     */
+    private fun resolveLang(detectedLang: String, text: String): String {
+        return when {
+            detectedLang.startsWith("id") -> "id"
+            detectedLang.startsWith("ar") -> "ar"
+            detectedLang.startsWith("en") -> "en"
+            detectedLang.startsWith("ko") -> "ko"
+            detectedLang.startsWith("ja") -> "ja"
+            detectedLang.startsWith("it") -> "it"
+            detectedLang.startsWith("es") -> "es"
+            else -> {
+                // Auto detect dari karakter teks
+                val sample = text.take(500)
+                val arabCount = sample.count { it in '\u0600'..'\u06FF' }
+                val latinCount = sample.count { it in 'a'..'z' || it in 'A'..'Z' }
+                val koCount = sample.count { it in '\uAC00'..'\uD7A3' }
+                val jaCount = sample.count { it in '\u3040'..'\u30FF' }
+                when {
+                    arabCount > latinCount * 0.3 -> "ar"  // banyak Arab
+                    koCount > 20  -> "ko"
+                    jaCount > 20  -> "ja"
+                    // Deteksi Indonesia dari kata-kata umum
+                    Regex("\\b(dan|yang|dengan|untuk|dari|ini|itu|adalah|juga|sudah|akan|saya|kita|Allah|bahwa|karena)\\b")
+                        .containsMatchIn(sample.lowercase()) -> "id"
+                    else -> "id"  // default Indonesia karena konteks kajian Islam
+                }
+            }
+        }
+    }
 
     private fun buildSystemPrompt(lang: String): String {
         return when {

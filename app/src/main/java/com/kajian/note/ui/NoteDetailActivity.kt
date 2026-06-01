@@ -28,6 +28,7 @@ import com.kajian.note.model.Note
 import com.kajian.note.model.TranscriptEntry
 import com.kajian.note.utils.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import java.io.File
 
 class NoteDetailActivity : AppCompatActivity() {
@@ -273,10 +274,13 @@ class NoteDetailActivity : AppCompatActivity() {
 
     // ── Mindmap Panel (#7 mindmap via Groq) ───────────────────────────────
 
-    private fun loadMindmapPanel(n: Note) {
-        if (b.mindmapView.tag == n.id) return  // sudah loaded
+    private fun loadMindmapPanel(n: Note, retryCount: Int = 0) {
+        if (b.mindmapView.tag == n.id) return
 
         b.tvMindmapLoading.isVisible = true
+        b.tvMindmapLoading.text = if (retryCount > 0)
+            "⏳ Mencoba ulang... ($retryCount/3)"
+        else "⏳ Generating mindmap via Groq AI..."
         b.mindmapView.isVisible = false
         b.btnGenerateMindmap.isVisible = false
 
@@ -289,16 +293,29 @@ class NoteDetailActivity : AppCompatActivity() {
             )
             b.tvMindmapLoading.isVisible = false
             result.onSuccess { mindmap ->
+                if (mindmap.nodes.isEmpty() && retryCount < 3) {
+                    // Retry jika nodes kosong
+                    delay(1000)
+                    loadMindmapPanel(n, retryCount + 1)
+                    return@launch
+                }
                 b.mindmapView.setMindmap(mindmap)
                 b.mindmapView.isVisible = true
                 b.mindmapView.tag = n.id
             }.onFailure {
-                b.tvMindmapLoading.text = "❌ Gagal generate mindmap.\nPastikan Groq key diset di Settings."
-                b.tvMindmapLoading.isVisible = true
-                b.btnGenerateMindmap.isVisible = true
-                b.btnGenerateMindmap.setOnClickListener {
-                    b.mindmapView.tag = null
-                    loadMindmapPanel(n)
+                if (retryCount < 2) {
+                    // Auto retry 2x sebelum tampil error
+                    delay(1500)
+                    loadMindmapPanel(n, retryCount + 1)
+                } else {
+                    b.tvMindmapLoading.text = "❌ Gagal generate mindmap setelah 3x percobaan.\nPastikan Groq key diset di Settings."
+                    b.tvMindmapLoading.isVisible = true
+                    b.btnGenerateMindmap.isVisible = true
+                    b.btnGenerateMindmap.text = "↻ Coba Lagi"
+                    b.btnGenerateMindmap.setOnClickListener {
+                        b.mindmapView.tag = null
+                        loadMindmapPanel(n, 0)
+                    }
                 }
             }
         }
