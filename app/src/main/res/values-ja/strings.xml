@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KajianNote</string>
+    <string name="tab_record">🎙️ 録音</string><string name="tab_notes">📚 ノート</string>
+    <string name="status_idle">録音準備完了</string><string name="status_recording">🔴 録音中…</string>
+    <string name="change_lang">変更</string><string name="lang_audio">音声言語</string>
+    <string name="name_speaker">名前</string><string name="next_speaker">次の話者</string>
+    <string name="name_speaker_title">この話者を命名</string>
+    <string name="name_speaker_msg">話者 %1$s の名前を入力</string>
+    <string name="speaker_renamed">%1$s に変更されました</string><string name="now_speaking">現在の話者</string>
+    <string name="speaker_change_detected">新しい話者? %1$s に切替?</string>
+    <string name="yes">はい</string><string name="no">いいえ</string>
+    <string name="btn_save">💾 保存</string><string name="btn_clear">🗑️ クリア</string>
+    <string name="btn_share">📤 共有</string><string name="btn_copy">📋 コピー</string>
+    <string name="save_note">ノートを保存</string><string name="save_success">✅ 保存しました!</string>
+    <string name="clear_confirm_title">文字起こしをクリア?</string><string name="clear_confirm_msg">録音されたすべてのテキストが削除されます。</string>
+    <string name="clear">クリア</string><string name="delete">削除</string>
+    <string name="delete_confirm_title">ノートを削除?</string><string name="delete_confirm_msg">"%1$s" が完全に削除されます。</string>
+    <string name="search_hint">🔍 ノートを検索…</string><string name="no_notes">ノートがまだありません</string>
+    <string name="no_notes_sub">講義を録音して\nノートを保存しましょう</string><string name="notes_saved">件のノートを保存</string>
+    <string name="label_notes">📝 文字起こし</string><string name="hint_transcript">録音テキストがここに表示されます…</string>
+    <string name="words">語</string><string name="settings">設定</string>
+    <string name="app_language">アプリ言語</string><string name="speaker_sensitivity">話者切替感度</string>
+    <string name="share_via">共有方法…</string><string name="copied">📋 クリップボードにコピーしました</string>
+    <string name="error_mic_permission">録音にはマイクの許可が必要です。</string>
+    <string name="tips_text">💡 ヒント:\n• 緑ボタンで録音開始\n• 言語は自動検出\n• 2分ごとにタイムスタンプ ⏱\n• 3.5秒の沈黙 = 話者交代プロンプト</string>
+</resources>

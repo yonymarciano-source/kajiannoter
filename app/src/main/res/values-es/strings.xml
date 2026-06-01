@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KajianNote</string>
+    <string name="tab_record">🎙️ Grabar</string><string name="tab_notes">📚 Notas</string>
+    <string name="status_idle">Listo para grabar</string><string name="status_recording">🔴 Grabando…</string>
+    <string name="change_lang">Cambiar</string><string name="lang_audio">Idioma de Audio</string>
+    <string name="name_speaker">Nombrar</string><string name="next_speaker">Siguiente Hablante</string>
+    <string name="name_speaker_title">Nombrar Este Hablante</string>
+    <string name="name_speaker_msg">Ingrese un nombre para el Hablante %1$s</string>
+    <string name="speaker_renamed">Renombrado a %1$s</string><string name="now_speaking">Habla ahora</string>
+    <string name="speaker_change_detected">¿Nuevo hablante? ¿Cambiar a %1$s?</string>
+    <string name="yes">Sí</string><string name="no">No</string>
+    <string name="btn_save">💾 Guardar</string><string name="btn_clear">🗑️ Limpiar</string>
+    <string name="btn_share">📤 Compartir</string><string name="btn_copy">📋 Copiar</string>
+    <string name="save_note">Guardar Nota</string><string name="save_success">✅ ¡Guardado con éxito!</string>
+    <string name="clear_confirm_title">¿Limpiar transcripción?</string><string name="clear_confirm_msg">Todo el texto grabado será eliminado.</string>
+    <string name="clear">Limpiar</string><string name="delete">Eliminar</string>
+    <string name="delete_confirm_title">¿Eliminar nota?</string><string name="delete_confirm_msg">"%1$s" será eliminado permanentemente.</string>
+    <string name="search_hint">🔍 Buscar notas…</string><string name="no_notes">Aún no hay notas</string>
+    <string name="no_notes_sub">Empieza a grabar una clase\ny guarda tus notas</string><string name="notes_saved">notas guardadas</string>
+    <string name="label_notes">📝 Transcripción</string><string name="hint_transcript">El texto aparecerá aquí…</string>
+    <string name="words">palabras</string><string name="settings">Ajustes</string>
+    <string name="app_language">Idioma de la App</string><string name="speaker_sensitivity">Sensibilidad de cambio de hablante</string>
+    <string name="share_via">Compartir via…</string><string name="copied">📋 Copiado al portapapeles</string>
+    <string name="error_mic_permission">Se necesita permiso de micrófono para grabar.</string>
+    <string name="tips_text">💡 Consejos:\n• Presiona el botón verde para grabar\n• Idioma detectado automáticamente\n• Cada 2 min se agrega marca ⏱\n• Silencio &gt; 3.5s = cambio de hablante</string>
+</resources>

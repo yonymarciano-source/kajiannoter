@@ -1,0 +1,13 @@
+workflows:
+  android-debug-build:
+    name: KajianNote APK Build
+    max_build_duration: 30
+    environment:
+      java: 17
+    scripts:
+      - name: Set gradlew permission
+        script: chmod +x gradlew
+      - name: Build debug APK
+        script: ./gradlew assembleDebug --stacktrace
+    artifacts:
+      - app/build/outputs/apk/debug/app-debug.apk

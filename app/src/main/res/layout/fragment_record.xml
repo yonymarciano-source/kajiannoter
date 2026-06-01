@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/bg_dark" android:fillViewport="true">
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="16dp">
+
+        <!-- Options row — compact toggles (#1) -->
+        <androidx.cardview.widget.CardView android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginBottom="12dp"
+            app:cardCornerRadius="16dp" app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/surface_dark">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:paddingVertical="8dp">
+
+                <!-- Language row -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="48dp"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:paddingHorizontal="16dp">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="🌐 Bahasa"
+                        android:textColor="@color/text_primary" android:textSize="13sp"/>
+                    <TextView android:id="@+id/tvCurrentLang"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:textColor="@color/primary_green" android:textSize="13sp"
+                        android:textStyle="bold" android:layout_marginEnd="8dp"/>
+                    <Button android:id="@+id/btnLanguage"
+                        android:layout_width="wrap_content" android:layout_height="32dp"
+                        android:text="Ubah" android:textSize="11sp"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:textColor="@color/text_secondary"
+                        app:strokeColor="@color/surface_variant" app:cornerRadius="16dp"
+                        android:layout_marginEnd="4dp"/>
+                    <ImageButton android:id="@+id/btnInfoLang" android:layout_width="28dp"
+                        android:layout_height="28dp" android:src="@drawable/ic_dot"
+                        android:tint="@color/text_tertiary"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Info bahasa"/>
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:layout_marginHorizontal="16dp" android:background="#15FFFFFF"/>
+
+                <!-- Mode Rekam row -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="48dp"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:paddingHorizontal="16dp">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="🎙 Mode"
+                        android:textColor="@color/text_primary" android:textSize="13sp"/>
+                    <TextView android:id="@+id/tvRecordModeLabel"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:textColor="@color/primary_green" android:textSize="12sp"
+                        android:layout_marginEnd="8dp" android:text="Langsung"/>
+                    <Button android:id="@+id/btnRecordMode"
+                        android:layout_width="wrap_content" android:layout_height="32dp"
+                        android:text="Ganti" android:textSize="11sp"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:textColor="@color/primary_green"
+                        app:strokeColor="@color/primary_green" app:cornerRadius="16dp"
+                        android:layout_marginEnd="4dp"/>
+                    <ImageButton android:id="@+id/btnInfoMode" android:layout_width="28dp"
+                        android:layout_height="28dp" android:src="@drawable/ic_dot"
+                        android:tint="@color/text_tertiary"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Info mode rekam"/>
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:layout_marginHorizontal="16dp" android:background="#15FFFFFF"/>
+
+                <!-- Audio Mode row -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="48dp"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:paddingHorizontal="16dp">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="🔊 Sumber"
+                        android:textColor="@color/text_primary" android:textSize="13sp"/>
+                    <TextView android:id="@+id/tvAudioModeLabel"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:textColor="@color/text_secondary" android:textSize="12sp"
+                        android:layout_marginEnd="8dp" android:text="Normal"/>
+                    <Button android:id="@+id/btnAudioMode"
+                        android:layout_width="wrap_content" android:layout_height="32dp"
+                        android:text="Ganti" android:textSize="11sp"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:textColor="@color/text_secondary"
+                        app:strokeColor="@color/surface_variant" app:cornerRadius="16dp"
+                        android:layout_marginEnd="4dp"/>
+                    <ImageButton android:id="@+id/btnInfoAudio" android:layout_width="28dp"
+                        android:layout_height="28dp" android:src="@drawable/ic_dot"
+                        android:tint="@color/text_tertiary"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Info sumber audio"/>
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Record Card -->
+        <androidx.cardview.widget.CardView android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginBottom="14dp"
+            app:cardCornerRadius="24dp" app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/surface_dark">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:gravity="center"
+                android:paddingVertical="28dp" android:paddingHorizontal="20dp">
+
+                <com.kajian.note.ui.WaveformView android:id="@+id/waveformView"
+                    android:layout_width="match_parent" android:layout_height="44dp"
+                    android:visibility="gone"/>
+                <TextView android:id="@+id/tvTimer"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="00:00" android:textSize="52sp" android:textStyle="bold"
+                    android:textColor="@color/text_primary" android:fontFamily="monospace"
+                    android:layout_marginTop="8dp"/>
+                <TextView android:id="@+id/tvStatus"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/status_idle" android:textColor="@color/text_secondary"
+                    android:textSize="13sp" android:layout_marginTop="4dp"
+                    android:layout_marginBottom="20dp"/>
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabRecord" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:src="@drawable/ic_mic"
+                    app:backgroundTint="@color/primary_green" app:tint="@color/bg_dark"
+                    app:fabSize="normal"/>
+                <TextView android:id="@+id/tvPartial"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textColor="@color/text_tertiary" android:textSize="12sp"
+                    android:gravity="center" android:layout_marginTop="12dp"
+                    android:visibility="gone"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Speaker Card -->
+        <androidx.cardview.widget.CardView android:id="@+id/cardSpeaker"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp" android:visibility="gone"
+            app:cardCornerRadius="16dp" app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/surface_dark">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="12dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="🎤 PEMBICARA AKTIF" android:textColor="@color/text_tertiary"
+                    android:textSize="10sp" android:textStyle="bold" android:layout_marginBottom="8dp"/>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical">
+                    <Button android:id="@+id/btnPrevSpeaker"
+                        android:layout_width="60dp" android:layout_height="44dp"
+                        android:text="◁ PREV" android:textSize="9sp"
+                        android:textColor="@color/text_tertiary"
+                        android:background="?attr/selectableItemBackground" android:alpha="0.3"/>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:orientation="horizontal"
+                        android:gravity="center" android:background="@drawable/bg_speaker_active"
+                        android:paddingVertical="10dp" android:paddingHorizontal="16dp">
+                        <TextView android:id="@+id/tvSpeakerLabel"
+                            android:layout_width="32dp" android:layout_height="32dp"
+                            android:background="@drawable/bg_badge_green"
+                            android:textColor="@color/bg_dark" android:textSize="14sp"
+                            android:textStyle="bold" android:gravity="center" android:text="A"/>
+                        <TextView android:id="@+id/tvSpeakerName"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:textColor="@color/primary_green" android:textSize="16sp"
+                            android:textStyle="bold" android:layout_marginStart="10dp"
+                            android:text="Speaker A"/>
+                    </LinearLayout>
+                    <Button android:id="@+id/btnNextSpeaker"
+                        android:layout_width="60dp" android:layout_height="44dp"
+                        android:text="NEXT ▷" android:textSize="9sp"
+                        android:textColor="@color/primary_green"
+                        android:background="?attr/selectableItemBackground"/>
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center"
+                    android:layout_marginTop="8dp">
+                    <Button android:id="@+id/btnNameSpeaker"
+                        android:layout_width="wrap_content" android:layout_height="32dp"
+                        android:text="✏ BERI NAMA PEMBICARA INI" android:textSize="10sp"
+                        android:textColor="@color/text_secondary"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"/>
+                </LinearLayout>
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="💡 Tap NEXT/PREV saat giliran pembicara berganti. Long press nama untuk rename."
+                    android:textColor="@color/text_tertiary" android:textSize="10sp"
+                    android:gravity="center" android:layout_marginTop="4dp"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Card hint -->
+        <androidx.cardview.widget.CardView android:id="@+id/cardHint"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp" app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/surface_dark">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="16dp">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Tap tombol rekam untuk mulai mencatat kajian."
+                    android:textColor="@color/text_tertiary" android:textSize="13sp"
+                    android:gravity="center"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Transcript edit area -->
+        <EditText android:id="@+id/etTranscript"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:minHeight="100dp" android:gravity="top|start"
+            android:background="@null" android:padding="8dp"
+            android:textColor="@color/text_primary" android:textSize="15sp"
+            android:lineSpacingExtra="6dp" android:inputType="textMultiLine|textCapSentences"
+            android:hint="Transkripsi akan muncul di sini..." android:hintTextColor="@color/text_tertiary"/>
+        <TextView android:id="@+id/tvWordCount"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="0 kata" android:textColor="@color/text_tertiary"
+            android:textSize="11sp" android:gravity="end" android:layout_marginBottom="8dp"/>
+
+        <!-- Save/Clear buttons -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:weightSum="2" android:layout_marginBottom="80dp">
+            <Button android:id="@+id/btnSave" android:layout_width="0dp" android:layout_height="48dp"
+                android:layout_weight="1" android:layout_marginEnd="6dp"
+                android:text="@string/save_note" android:textColor="#121212" android:textStyle="bold"
+                android:backgroundTint="@color/primary_green" android:stateListAnimator="@null"
+                android:enabled="false"/>
+            <Button android:id="@+id/btnClear" style="@style/ActionBtnSecondary"
+                android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                android:text="@string/clear"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

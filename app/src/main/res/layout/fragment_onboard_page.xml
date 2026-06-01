@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:gravity="center"
+    android:padding="40dp" android:background="@color/bg_dark">
+    <TextView android:id="@+id/tvEmoji"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:textSize="80sp" android:layout_marginBottom="40dp" android:gravity="center"/>
+    <TextView android:id="@+id/tvTitle"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:textSize="26sp" android:textStyle="bold" android:textColor="@color/text_primary"
+        android:gravity="center" android:layout_marginBottom="20dp"
+        android:fontFamily="sans-serif-medium"/>
+    <TextView android:id="@+id/tvDesc"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textSize="16sp" android:textColor="@color/text_secondary"
+        android:gravity="center" android:lineSpacingExtra="6dp"/>
+</LinearLayout>

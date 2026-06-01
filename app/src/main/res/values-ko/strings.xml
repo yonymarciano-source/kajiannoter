@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KajianNote</string>
+    <string name="tab_record">🎙️ 녹음</string><string name="tab_notes">📚 메모</string>
+    <string name="status_idle">녹음 준비</string><string name="status_recording">🔴 녹음 중…</string>
+    <string name="change_lang">변경</string><string name="lang_audio">오디오 언어</string>
+    <string name="name_speaker">이름</string><string name="next_speaker">다음 화자</string>
+    <string name="name_speaker_title">이 화자 이름 지정</string>
+    <string name="name_speaker_msg">화자 %1$s의 이름을 입력하세요</string>
+    <string name="speaker_renamed">%1$s으로 변경됨</string><string name="now_speaking">지금 말하는 사람</string>
+    <string name="speaker_change_detected">새 화자? %1$s으로 전환?</string>
+    <string name="yes">예</string><string name="no">아니오</string>
+    <string name="btn_save">💾 저장</string><string name="btn_clear">🗑️ 지우기</string>
+    <string name="btn_share">📤 공유</string><string name="btn_copy">📋 복사</string>
+    <string name="save_note">메모 저장</string><string name="save_success">✅ 저장됨!</string>
+    <string name="clear_confirm_title">녹취록 지우기?</string><string name="clear_confirm_msg">모든 녹음 텍스트가 삭제됩니다.</string>
+    <string name="clear">지우기</string><string name="delete">삭제</string>
+    <string name="delete_confirm_title">메모 삭제?</string><string name="delete_confirm_msg">"%1$s"이(가) 영구 삭제됩니다.</string>
+    <string name="search_hint">🔍 메모 검색…</string><string name="no_notes">아직 메모 없음</string>
+    <string name="no_notes_sub">강의를 녹음하고\n메모를 저장하세요</string><string name="notes_saved">개 메모 저장됨</string>
+    <string name="label_notes">📝 녹취록</string><string name="hint_transcript">녹음 텍스트가 여기에 표시됩니다…</string>
+    <string name="words">단어</string><string name="settings">설정</string>
+    <string name="app_language">앱 언어</string><string name="speaker_sensitivity">화자 변경 감도</string>
+    <string name="share_via">공유 방법…</string><string name="copied">📋 클립보드에 복사됨</string>
+    <string name="error_mic_permission">녹음하려면 마이크 권한이 필요합니다.</string>
+    <string name="tips_text">💡 팁:\n• 녹색 버튼을 눌러 녹음 시작\n• 언어 자동 감지\n• 2분마다 타임스탬프 ⏱ 추가\n• 3.5초 침묵 = 화자 변경 알림</string>
+</resources>
