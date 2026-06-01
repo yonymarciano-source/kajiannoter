@@ -140,7 +140,10 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
     }
 
     private fun updateLangDisplay(lang: String) {
-        b.tvCurrentLang.text = LanguageDetector.getDisplayName(lang)
+        // Tampilkan "Auto Detect" jika auto, bukan bahasa device
+        val savedPref = prefs.getRecordingLanguage()
+        b.tvCurrentLang.text = if (savedPref == "auto") "🌐 Auto Detect"
+                               else LanguageDetector.getDisplayName(lang)
     }
 
     private fun showLanguagePicker() {

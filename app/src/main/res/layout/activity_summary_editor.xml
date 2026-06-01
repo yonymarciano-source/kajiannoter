@@ -9,72 +9,106 @@
 
     <!-- Formatting toolbar -->
     <HorizontalScrollView android:layout_width="match_parent" android:layout_height="48dp"
-        android:background="@color/surface_dark" android:scrollbars="none">
+        android:background="@color/surface_dark" android:scrollbars="none"
+        android:fillViewport="false">
         <LinearLayout android:layout_width="wrap_content" android:layout_height="match_parent"
             android:orientation="horizontal" android:gravity="center_vertical"
-            android:paddingHorizontal="8dp">
+            android:paddingHorizontal="8dp" android:paddingVertical="4dp">
 
+            <!-- Undo -->
             <ImageButton android:id="@+id/btnUndo" android:layout_width="40dp"
                 android:layout_height="40dp" android:src="@drawable/ic_back"
                 android:tint="@color/text_secondary"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Undo"/>
+
+            <View android:layout_width="1dp" android:layout_height="24dp"
+                android:background="#33FFFFFF" android:layout_marginHorizontal="6dp"/>
+
+            <!-- H = Font size -->
+            <Button android:id="@+id/btnHeading"
+                android:layout_width="44dp" android:layout_height="36dp"
+                android:text="M" android:textStyle="bold" android:textSize="13sp"
+                android:textColor="@color/text_secondary"
+                android:background="@drawable/bg_btn_secondary"
+                android:stateListAnimator="@null" android:layout_marginEnd="4dp"/>
+
+            <!-- B Bold -->
+            <Button android:id="@+id/btnBold"
+                android:layout_width="36dp" android:layout_height="36dp"
+                android:text="B" android:textStyle="bold" android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_marginEnd="2dp"/>
+
+            <!-- I Italic -->
+            <Button android:id="@+id/btnItalic"
+                android:layout_width="36dp" android:layout_height="36dp"
+                android:text="I" android:textStyle="italic" android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_marginEnd="2dp"/>
+
+            <!-- S Strike -->
+            <Button android:id="@+id/btnStrike"
+                android:layout_width="36dp" android:layout_height="36dp"
+                android:text="S" android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_marginEnd="2dp"/>
+
+            <View android:layout_width="1dp" android:layout_height="24dp"
+                android:background="#33FFFFFF" android:layout_marginHorizontal="6dp"/>
+
+            <!-- Bullet -->
+            <Button android:id="@+id/btnBullet"
+                android:layout_width="36dp" android:layout_height="36dp"
+                android:text="•≡" android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_marginEnd="2dp"/>
+
+            <!-- Number -->
+            <Button android:id="@+id/btnNumber"
+                android:layout_width="36dp" android:layout_height="36dp"
+                android:text="1≡" android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_marginEnd="2dp"/>
+
+            <View android:layout_width="1dp" android:layout_height="24dp"
+                android:background="#33FFFFFF" android:layout_marginHorizontal="6dp"/>
+
+            <!-- Indent → -->
+            <Button android:id="@+id/btnIndent"
+                android:layout_width="36dp" android:layout_height="36dp"
+                android:text="→" android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_marginEnd="2dp"/>
+
+            <!-- Outdent ← -->
+            <Button android:id="@+id/btnOutdent"
+                android:layout_width="36dp" android:layout_height="36dp"
+                android:text="←" android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_marginEnd="2dp"/>
+
+            <View android:layout_width="1dp" android:layout_height="24dp"
+                android:background="#33FFFFFF" android:layout_marginHorizontal="6dp"/>
+
+            <!-- Redo / Reset -->
+            <Button android:id="@+id/btnRedo"
+                android:layout_width="36dp" android:layout_height="36dp"
+                android:text="↺" android:textSize="16sp"
+                android:textColor="@color/text_secondary"
                 android:background="?attr/selectableItemBackgroundBorderless"/>
 
-            <View android:layout_width="1dp" android:layout_height="24dp"
-                android:background="@color/surface_variant" android:layout_marginHorizontal="4dp"/>
-
-            <Button android:id="@+id/btnHeading" android:layout_width="36dp"
-                android:layout_height="36dp" android:text="H" android:textStyle="bold"
-                android:textSize="14sp" android:textColor="@color/text_secondary"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="4dp"/>
-            <Button android:id="@+id/btnBold" android:layout_width="36dp"
-                android:layout_height="36dp" android:text="B" android:textStyle="bold"
-                android:textSize="14sp" android:textColor="@color/text_secondary"
-                android:background="?attr/selectableItemBackgroundBorderless" android:padding="4dp"/>
-            <Button android:id="@+id/btnItalic" android:layout_width="36dp"
-                android:layout_height="36dp" android:text="I" android:textStyle="italic"
-                android:textSize="14sp" android:textColor="@color/text_secondary"
-                android:background="?attr/selectableItemBackgroundBorderless" android:padding="4dp"/>
-            <Button android:id="@+id/btnStrike" android:layout_width="36dp"
-                android:layout_height="36dp" android:text="S" android:textSize="14sp"
-                android:textColor="@color/text_secondary"
-                android:background="?attr/selectableItemBackgroundBorderless" android:padding="4dp"/>
-
-            <View android:layout_width="1dp" android:layout_height="24dp"
-                android:background="@color/surface_variant" android:layout_marginHorizontal="4dp"/>
-
-            <Button android:id="@+id/btnBullet" android:layout_width="36dp"
-                android:layout_height="36dp" android:text="•≡" android:textSize="13sp"
-                android:textColor="@color/text_secondary"
-                android:background="?attr/selectableItemBackgroundBorderless" android:padding="4dp"/>
-            <Button android:id="@+id/btnNumber" android:layout_width="36dp"
-                android:layout_height="36dp" android:text="1≡" android:textSize="13sp"
-                android:textColor="@color/text_secondary"
-                android:background="?attr/selectableItemBackgroundBorderless" android:padding="4dp"/>
-
-            <View android:layout_width="1dp" android:layout_height="24dp"
-                android:background="@color/surface_variant" android:layout_marginHorizontal="4dp"/>
-
-            <Button android:id="@+id/btnIndent" android:layout_width="36dp"
-                android:layout_height="36dp" android:text="→" android:textSize="14sp"
-                android:textColor="@color/text_secondary"
-                android:background="?attr/selectableItemBackgroundBorderless" android:padding="4dp"/>
-            <Button android:id="@+id/btnOutdent" android:layout_width="36dp"
-                android:layout_height="36dp" android:text="←" android:textSize="14sp"
-                android:textColor="@color/text_secondary"
-                android:background="?attr/selectableItemBackgroundBorderless" android:padding="4dp"/>
-
-            <View android:layout_width="1dp" android:layout_height="24dp"
-                android:background="@color/surface_variant" android:layout_marginHorizontal="4dp"/>
-
-            <Button android:id="@+id/btnQuote" android:layout_width="36dp"
-                android:layout_height="36dp" android:text="❝" android:textSize="14sp"
-                android:textColor="@color/text_secondary"
-                android:background="?attr/selectableItemBackgroundBorderless" android:padding="4dp"/>
         </LinearLayout>
     </HorizontalScrollView>
 
-    <!-- Editor -->
+    <!-- Editor area -->
     <EditText android:id="@+id/etSummary"
         android:layout_width="match_parent" android:layout_height="0dp"
         android:layout_weight="1" android:gravity="top|start"
@@ -82,4 +116,5 @@
         android:textSize="15sp" android:lineSpacingExtra="6dp"
         android:background="@color/bg_dark"
         android:inputType="textMultiLine|textCapSentences"/>
+
 </LinearLayout>

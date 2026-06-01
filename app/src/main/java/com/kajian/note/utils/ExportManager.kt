@@ -59,15 +59,15 @@ object ExportManager {
         val pageHeight = 842
         val margin     = 56f
 
-        val colorPrimary = Color.parseColor("#1DB954")
-        val colorDark    = Color.parseColor("#121212")
-        val colorSurface = Color.parseColor("#1E1E1E")
-        val colorText    = Color.parseColor("#EEEEEE")
-        val colorMuted   = Color.parseColor("#888888")
+        val colorPrimary = Color.parseColor("#1A7A40")   // green gelap — tetap keliatan di putih
+        val colorDark    = Color.WHITE
+        val colorSurface = Color.parseColor("#F5F5F5")
+        val colorText    = Color.parseColor("#1A1A1A")
+        val colorMuted   = Color.parseColor("#666666")
 
         val paintBg     = Paint().apply { color = colorDark;    style = Paint.Style.FILL }
         val paintAccent = Paint().apply { color = colorPrimary; style = Paint.Style.FILL }
-        val paintTitle  = Paint().apply { color = Color.WHITE;  textSize = 20f; typeface = Typeface.DEFAULT_BOLD; isAntiAlias = true }
+        val paintTitle  = Paint().apply { color = Color.parseColor("#1A1A1A"); textSize = 20f; typeface = Typeface.DEFAULT_BOLD; isAntiAlias = true }
         val paintMeta   = Paint().apply { color = colorMuted;   textSize = 11f; isAntiAlias = true }
         val paintHead   = Paint().apply { color = colorPrimary; textSize = 13f; typeface = Typeface.DEFAULT_BOLD; isAntiAlias = true }
         val paintBody   = Paint().apply { color = colorText;    textSize = 12f; isAntiAlias = true }
@@ -209,7 +209,7 @@ object ExportManager {
 
         // Summary
         if (!summary.isNullOrBlank()) {
-            sb.append(para("RINGKASAN", bold = true, size = 24, color = "1DB954"))
+            sb.append(para("RINGKASAN", bold = true, size = 24, color = "1A7A40"))
             for (line in summary.lines()) {
                 if (line.isNotBlank()) sb.append(para(line, size = 22))
             }
@@ -217,7 +217,7 @@ object ExportManager {
         }
 
         // Transcript
-        sb.append(para("TRANSKRIPSI", bold = true, size = 24, color = "1DB954"))
+        sb.append(para("TRANSKRIPSI", bold = true, size = 24, color = "1A7A40"))
         for (line in note.plainText.lines()) {
             sb.append(para(if (line.isBlank()) "" else line, size = 22))
         }
@@ -237,7 +237,7 @@ object ExportManager {
         style: String? = null,
         bold: Boolean = false,
         size: Int = 22,          // half-points, 22 = 11pt
-        color: String = "EEEEEE"
+        color: String = "1A1A1A"
     ): String {
         val styleXml = if (style != null) "<w:pStyle w:val=\"$style\"/>" else ""
         val boldXml  = if (bold) "<w:b/><w:bCs/>" else ""
@@ -283,11 +283,11 @@ object ExportManager {
 <w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:style w:type="paragraph" w:styleId="Normal" w:default="1">
     <w:name w:val="Normal"/>
-    <w:rPr><w:color w:val="EEEEEE"/><w:sz w:val="22"/></w:rPr>
+    <w:rPr><w:color w:val="1A1A1A"/><w:sz w:val="22"/></w:rPr>
   </w:style>
   <w:style w:type="paragraph" w:styleId="Title">
     <w:name w:val="Title"/>
-    <w:rPr><w:b/><w:color w:val="FFFFFF"/><w:sz w:val="36"/></w:rPr>
+    <w:rPr><w:b/><w:color w:val="1A1A1A"/><w:sz w:val="36"/></w:rPr>
   </w:style>
 </w:styles>"""
 

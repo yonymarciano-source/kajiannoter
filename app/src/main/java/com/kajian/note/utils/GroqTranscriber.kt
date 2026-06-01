@@ -58,7 +58,9 @@ object GroqTranscriber {
                 lang.startsWith("ar") -> "ar"
                 lang.startsWith("ko") -> "ko"
                 lang.startsWith("ja") -> "ja"
-                else                  -> null  // null = auto detect oleh Whisper
+                lang.startsWith("it") -> "it"
+                lang.startsWith("es") -> "es"
+                else -> null  // null = auto detect oleh Whisper (tidak kirim parameter language)
             }
 
             onProgress(25, "Mengirim audio ke Groq...")

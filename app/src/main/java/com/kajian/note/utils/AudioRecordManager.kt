@@ -52,16 +52,16 @@ class AudioRecordManager(private val onAmplitude: (Float) -> Unit) {
                 RandomAccessFile(file, "rw").use { raf ->
                     raf.write(ByteArray(44)) // WAV header placeholder
                     val shortBuf = ShortArray(bufferSize / 2)
-                    val byteBuf  = ByteBuffer.allocate(bufferSize).order(ByteOrder.LITTLE_ENDIAN)
                     var totalBytes = 0L
                     while (isRecording) {
                         val read = audioRecord?.read(shortBuf, 0, shortBuf.size) ?: 0
                         if (read <= 0) continue
                         val amp = shortBuf.take(read).map { Math.abs(it.toInt()) }.average().toFloat()
                         withContext(Dispatchers.Main) { onAmplitude(amp / 32768f * 28f) }
-                        byteBuf.clear()
-                        for (i in 0 until read) byteBuf.putShort(shortBuf[i])
-                        raf.write(byteBuf.array(), 0, read * 2)
+                        // Fix: tulis hanya read*2 bytes, bukan seluruh buffer
+                        val bb = ByteBuffer.allocate(read * 2).order(ByteOrder.LITTLE_ENDIAN)
+                        for (i in 0 until read) bb.putShort(shortBuf[i])
+                        raf.write(bb.array())   // bb.array() = read*2 bytes persis
                         totalBytes += read * 2
                     }
                     raf.seek(0)
