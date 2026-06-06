@@ -169,7 +169,6 @@ object GroqTranscriber {
             "ERROR: HTTP $code"
         }
     }
-}
 
     /**
      * Transkripsi file WAV panjang dengan otomatis split per 3 menit.
@@ -232,3 +231,4 @@ object GroqTranscriber {
         }
         return newText
     }
+}
