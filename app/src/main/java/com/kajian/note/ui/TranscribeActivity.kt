@@ -12,6 +12,7 @@ import com.kajian.note.db.NoteRepository
 import com.kajian.note.model.Note
 import com.kajian.note.utils.GroqTranscriber
 import com.kajian.note.utils.PreferencesManager
+import com.kajian.note.utils.WavChunker
 import com.kajian.note.utils.WhisperTranscriber
 import kotlinx.coroutines.launch
 import java.io.File
@@ -125,14 +126,35 @@ class TranscribeActivity : AppCompatActivity() {
         lifecycleScope.launch {
             var lastMsg = "(belum mulai)"
             val result = runCatching {
-                GroqTranscriber.transcribe(
-                    ctx        = this@TranscribeActivity,
-                    wavFile    = wavFile,
-                    lang       = code,
-                    onProgress = { pct, msg ->
-                        lastMsg = msg
-                        runOnUiThread { b.progressBar.progress = pct; b.tvStatus.text = msg }
+                // Cek durasi rekaman — pakai chunked untuk file panjang
+                val wavInfo   = WavChunker.parseHeader(wavFile)
+                val durationS = wavInfo?.durationSec ?: 0.0
+                val isLong    = durationS > WavChunker.MAX_CHUNK_SEC
+
+                if (isLong) {
+                    runOnUiThread {
+                        b.tvSubtitle.text = "Rekaman panjang (${durationS.toInt()}s) — split per ${WavChunker.MAX_CHUNK_SEC / 60} menit"
                     }
+                    GroqTranscriber.transcribeChunked(
+                        ctx        = this@TranscribeActivity,
+                        wavFile    = wavFile,
+                        lang       = code,
+                        onProgress = { pct, msg ->
+                            lastMsg = msg
+                            runOnUiThread { b.progressBar.progress = pct; b.tvStatus.text = msg }
+                        }
+                    )
+                } else {
+                    GroqTranscriber.transcribe(
+                        ctx        = this@TranscribeActivity,
+                        wavFile    = wavFile,
+                        lang       = code,
+                        onProgress = { pct, msg ->
+                            lastMsg = msg
+                            runOnUiThread { b.progressBar.progress = pct; b.tvStatus.text = msg }
+                        }
+                    )
+                }
                 )
             }
             isProcessing = false

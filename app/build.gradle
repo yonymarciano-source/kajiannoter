@@ -11,8 +11,8 @@ android {
         applicationId "com.kajian.note"
         minSdk 24
         targetSdk 35
-        versionCode 14
-        versionName "3.11"
+        versionCode 15
+        versionName "3.11.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }

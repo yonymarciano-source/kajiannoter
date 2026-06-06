@@ -67,8 +67,8 @@ object GroqTranscriber {
 
             val conn = URL(GROQ_URL).openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
-            conn.connectTimeout = 30_000
-            conn.readTimeout    = 120_000
+            conn.connectTimeout = 60_000   // 60 detik connect
+            conn.readTimeout    = 300_000  // 5 menit read — cukup untuk file besar
             conn.doOutput       = true
             conn.setRequestProperty("Authorization", "Bearer $apiKey")
             conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=$BOUNDARY")
@@ -170,3 +170,65 @@ object GroqTranscriber {
         }
     }
 }
+
+    /**
+     * Transkripsi file WAV panjang dengan otomatis split per 3 menit.
+     * Tiap chunk dikirim ke Groq, hasilnya digabung.
+     * Cocok untuk Mode Rekam kajian panjang (>11 menit).
+     */
+    suspend fun transcribeChunked(
+        ctx: Context,
+        wavFile: File,
+        lang: String,
+        onProgress: (Int, String) -> Unit
+    ): String = withContext(Dispatchers.IO) {
+        val chunks = WavChunker.split(wavFile, ctx.cacheDir)
+
+        if (chunks.size == 1) {
+            // File pendek — transcribe langsung
+            return@withContext transcribe(ctx, wavFile, lang, onProgress)
+        }
+
+        val results = StringBuilder()
+        val total   = chunks.size
+
+        chunks.forEachIndexed { i, chunk ->
+            val pct = ((i.toFloat() / total) * 80).toInt() + 10
+            onProgress(pct, "Transkripsi bagian ${i + 1} dari $total...")
+            android.util.Log.d("GroqTranscriber", "Chunk ${i+1}/$total: ${chunk.name}")
+
+            val result = transcribe(ctx, chunk, lang) { _, _ -> }
+
+            if (result.isNotBlank() && !result.startsWith("ERROR")) {
+                // Deduplikasi overlap antar chunk
+                val prev = results.toString()
+                val deduped = deduplicateChunkOverlap(prev, result.trim())
+                if (results.isNotEmpty()) results.append(" ")
+                results.append(deduped)
+            }
+
+            // Hapus chunk sementara
+            if (chunk.absolutePath != wavFile.absolutePath) chunk.delete()
+        }
+
+        onProgress(95, "Menggabungkan hasil...")
+        val final = ArabicPostProcessor.process(
+            DictionaryManager(ctx).correct(results.toString().trim())
+        )
+        android.util.Log.d("GroqTranscriber", "Chunked result: ${final.length} chars")
+        final
+    }
+
+    private fun deduplicateChunkOverlap(existing: String, newText: String): String {
+        if (existing.isBlank() || newText.isBlank()) return newText
+        val existWords = existing.trimEnd().split("\\s+".toRegex())
+        val newWords   = newText.trimStart().split("\\s+".toRegex())
+        for (overlap in minOf(8, existWords.size, newWords.size) downTo 3) {
+            val suffix = existWords.takeLast(overlap).joinToString(" ")
+            val prefix = newWords.take(overlap).joinToString(" ")
+            if (suffix.lowercase() == prefix.lowercase()) {
+                return newWords.drop(overlap).joinToString(" ")
+            }
+        }
+        return newText
+    }
