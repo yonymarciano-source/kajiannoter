@@ -41,15 +41,23 @@ data class Note(
                else plainText
     }
 
-    fun getLanguageLabel(): String = when (detectedLanguage) {
-        "id-ID" -> "🇮🇩 ID"
-        "en-US" -> "🇺🇸 EN"
-        "ar-SA" -> "🌙 AR"
-        "ko-KR" -> "🇰🇷 KO"
-        "ja-JP" -> "🇯🇵 JA"
-        "it-IT" -> "🇮🇹 IT"
-        "es-ES" -> "🇪🇸 ES"
-        else    -> "🌐 AUTO"
+    fun getLanguageLabel(): String = when {
+        detectedLanguage.startsWith("id") -> "🇮🇩 ID"
+        detectedLanguage.startsWith("en") -> "🇺🇸 EN"
+        detectedLanguage.startsWith("ar") -> "🌙 AR"
+        detectedLanguage.startsWith("ms") -> "🇲🇾 MS"
+        detectedLanguage.startsWith("ko") -> "🇰🇷 KO"
+        detectedLanguage.startsWith("ja") -> "🇯🇵 JA"
+        detectedLanguage.startsWith("zh") -> "🇨🇳 ZH"
+        detectedLanguage.startsWith("fr") -> "🇫🇷 FR"
+        detectedLanguage.startsWith("de") -> "🇩🇪 DE"
+        detectedLanguage.startsWith("it") -> "🇮🇹 IT"
+        detectedLanguage.startsWith("es") -> "🇪🇸 ES"
+        detectedLanguage.startsWith("tr") -> "🇹🇷 TR"
+        detectedLanguage.startsWith("ru") -> "🇷🇺 RU"
+        detectedLanguage.startsWith("hi") -> "🇮🇳 HI"
+        detectedLanguage.startsWith("pt") -> "🇵🇹 PT"
+        else -> "🌐 AUTO"
     }
 
     fun hasAudio(): Boolean = audioPath.isNotBlank() &&

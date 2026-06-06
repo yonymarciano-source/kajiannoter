@@ -28,10 +28,21 @@
             android:orientation="vertical" android:padding="16dp">
 
             <!-- Header -->
-            <TextView android:id="@+id/tvTitle"
-                android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:textColor="@color/text_primary" android:textSize="20sp"
-                android:textStyle="bold" android:layout_marginBottom="6dp"/>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_marginBottom="6dp">
+                <TextView android:id="@+id/tvTitle"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/text_primary" android:textSize="20sp"
+                    android:textStyle="bold"/>
+                <ImageButton android:id="@+id/btnEditTitle"
+                    android:layout_width="36dp" android:layout_height="36dp"
+                    android:src="@drawable/ic_edit"
+                    android:tint="@color/text_secondary"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:layout_marginStart="4dp"/>
+            </LinearLayout>
             <TextView android:id="@+id/tvMeta"
                 android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:textColor="@color/text_secondary" android:textSize="12sp"
@@ -52,10 +63,19 @@
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                         android:text="🎵 Audio Kajian" android:textColor="@color/primary_green"
                         android:textSize="12sp" android:textStyle="bold" android:layout_marginBottom="10dp"/>
-                    <SeekBar android:id="@+id/seekBar" android:layout_width="match_parent"
+                    <FrameLayout android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:progressTint="@color/primary_green" android:thumbTint="@color/primary_green"
-                        android:layout_marginBottom="4dp"/>
+                        android:layout_marginBottom="4dp">
+                        <SeekBar android:id="@+id/seekBar" android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:progressTint="@color/primary_green"
+                            android:thumbTint="@color/primary_green"/>
+                        <com.kajian.note.ui.BookmarkOverlayView
+                            android:id="@+id/bookmarkOverlay"
+                            android:layout_width="match_parent"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center_vertical"/>
+                    </FrameLayout>
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                         android:orientation="horizontal" android:layout_marginBottom="12dp">
                         <TextView android:id="@+id/tvCurrentTime" android:layout_width="wrap_content"

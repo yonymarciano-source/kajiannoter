@@ -177,12 +177,38 @@ class NoteDetailActivity : AppCompatActivity() {
             b.tvTranscript.text = buildSegmentedTranscript(raw)
         }
 
-        b.btnShare.setOnClickListener  { shareNote(n) }
-        b.btnCopy.setOnClickListener   { copyNote(n) }
-        b.btnEdit.setOnClickListener   { toggleEdit(n) }
-        b.btnExport.setOnClickListener { showExportDialog(n) }
+        b.btnShare.setOnClickListener     { shareNote(n) }
+        b.btnCopy.setOnClickListener      { copyNote(n) }
+        b.btnEdit.setOnClickListener      { toggleEdit(n) }
+        b.btnExport.setOnClickListener    { showExportDialog(n) }
+        b.btnEditTitle.setOnClickListener { showEditTitleDialog(n) }
 
         if (currentTab != 0) showTab(currentTab)
+    }
+
+    private fun showEditTitleDialog(n: Note) {
+        val input = android.widget.EditText(this).apply {
+            setText(n.title)
+            selectAll()
+            setPadding(48, 24, 48, 24)
+            hint = "Judul catatan"
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle("✏️ Edit Judul")
+            .setView(input)
+            .setPositiveButton("Simpan") { _, _ ->
+                val newTitle = input.text.toString().trim()
+                if (newTitle.isNotBlank()) {
+                    val updated = n.copy(title = newTitle, updatedAt = System.currentTimeMillis())
+                    note = updated
+                    vm.updateNote(updated)
+                    b.tvTitle.text = newTitle
+                    supportActionBar?.title = newTitle
+                    Toast.makeText(this, "✅ Judul diperbarui", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Batal", null)
+            .show()
     }
 
     // ── Summary Panel (#8 editor + #9 save + #10 discard) ────────────────
@@ -344,6 +370,7 @@ class NoteDetailActivity : AppCompatActivity() {
                         b.tvTotalTime.text   = player.formatTime(total)
                         highlightTranscriptAt(cur, n)
                         updateBookmarkButtonState(cur)
+                        b.bookmarkOverlay.update(bookmarks, total, cur)
                     }
                 },
                 onComplete = {
@@ -386,18 +413,18 @@ class NoteDetailActivity : AppCompatActivity() {
             val posMs = player.currentPosition
             val nearby = bookmarks.firstOrNull { Math.abs(it - posMs) <= 3000 }
             if (nearby != null) {
-                // Hapus bookmark yang ada di dekat posisi ini
                 bookmarks.remove(nearby)
                 saveBookmarks()
                 refreshTranscriptBookmarks()
+                updateBookmarkOverlay()
                 Toast.makeText(this, "Bookmark dihapus: ${formatMs(nearby)}", Toast.LENGTH_SHORT).show()
             } else {
-                // Tambah bookmark baru
                 if (posMs > 0) {
                     bookmarks.add(posMs)
                     bookmarks.sort()
                     saveBookmarks()
                     refreshTranscriptBookmarks()
+                    updateBookmarkOverlay()
                     Toast.makeText(this, "⭐ Ditandai: ${formatMs(posMs)}", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -459,34 +486,129 @@ class NoteDetailActivity : AppCompatActivity() {
                 ?: mutableListOf()
         } catch (_: Exception) { bookmarks = mutableListOf() }
         updateBookmarkButtonState(player.currentPosition)
+        b.bookmarkOverlay.post {
+            b.bookmarkOverlay.update(bookmarks, player.duration, player.currentPosition)
+        }
     }
 
-    // Dialog list semua bookmark — bisa jump atau hapus satu-satu
+    // Dialog list bookmark — custom layout per item dengan Jump + Hapus
     private fun showBookmarkListDialog() {
         if (bookmarks.isEmpty()) {
             Toast.makeText(this, "Belum ada bookmark", Toast.LENGTH_SHORT).show()
             return
         }
-        val items = bookmarks.mapIndexed { i, ms ->
-            "⭐ ${i + 1}  —  ${formatMs(ms)}"
-        }.toTypedArray()
 
-        AlertDialog.Builder(this)
-            .setTitle("Daftar Bookmark")
-            .setItems(items) { _, which ->
-                val ms = bookmarks[which]
-                player.seekTo(ms)
-                Toast.makeText(this, "Jump ke ${formatMs(ms)}", Toast.LENGTH_SHORT).show()
+        val ctx = this
+        val container = android.widget.LinearLayout(ctx).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(0, 8, 0, 8)
+        }
+
+        // Header
+        val header = android.widget.TextView(ctx).apply {
+            text = "⭐ Daftar Bookmark"
+            textSize = 16f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(48, 32, 48, 16)
+            setTextColor(resources.getColor(R.color.text_primary, null))
+        }
+        container.addView(header)
+
+        fun rebuildItems() {
+            container.removeViews(1, container.childCount - 1)
+            bookmarks.forEachIndexed { i, ms ->
+                val row = android.widget.LinearLayout(ctx).apply {
+                    orientation = android.widget.LinearLayout.HORIZONTAL
+                    gravity = android.view.Gravity.CENTER_VERTICAL
+                    setPadding(48, 12, 24, 12)
+                    val isNear = Math.abs(ms - player.currentPosition) <= 3000
+                    if (isNear) setBackgroundColor(0x18F5C400.toInt())
+                }
+                val label = android.widget.TextView(ctx).apply {
+                    text = "⭐  ${formatMs(ms)}" +
+                        if (Math.abs(ms - player.currentPosition) <= 3000) "  ● sekarang" else ""
+                    textSize = 14f
+                    setTextColor(resources.getColor(R.color.text_primary, null))
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                }
+                val btnJump = android.widget.Button(ctx).apply {
+                    text = "Jump"
+                    textSize = 12f
+                    setTextColor(0xFF1DB954.toInt())
+                    background = null
+                    setPadding(16, 8, 8, 8)
+                    setOnClickListener {
+                        player.seekTo(ms)
+                        Toast.makeText(ctx, "Jump ke ${formatMs(ms)}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                val btnDel = android.widget.Button(ctx).apply {
+                    text = "Hapus"
+                    textSize = 12f
+                    setTextColor(0xFFE57373.toInt())
+                    background = null
+                    setPadding(8, 8, 16, 8)
+                    setOnClickListener {
+                        bookmarks.removeAt(i)
+                        saveBookmarks()
+                        refreshTranscriptBookmarks()
+                        updateBookmarkOverlay()
+                        updateBookmarkButtonState(player.currentPosition)
+                        if (bookmarks.isEmpty()) {
+                            Toast.makeText(ctx, "Semua bookmark dihapus", Toast.LENGTH_SHORT).show()
+                        } else {
+                            rebuildItems()
+                        }
+                    }
+                }
+                row.addView(label)
+                row.addView(btnJump)
+                row.addView(btnDel)
+                container.addView(row)
+
+                // Divider
+                if (i < bookmarks.lastIndex) {
+                    container.addView(android.view.View(ctx).apply {
+                        layoutParams = android.widget.LinearLayout.LayoutParams(
+                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 1).apply {
+                            setMargins(48, 0, 48, 0)
+                        }
+                        setBackgroundColor(0x22FFFFFF)
+                    })
+                }
             }
-            .setNeutralButton("Hapus Semua") { _, _ ->
+
+            // Hapus semua
+            val btnClearAll = android.widget.Button(ctx).apply {
+                text = "Hapus Semua"
+                textSize = 13f
+                setTextColor(resources.getColor(R.color.text_secondary, null))
+                background = null
+                setPadding(48, 24, 48, 16)
+            }
+            container.addView(btnClearAll)
+            btnClearAll.setOnClickListener {
                 bookmarks.clear()
                 saveBookmarks()
                 refreshTranscriptBookmarks()
+                updateBookmarkOverlay()
                 updateBookmarkButtonState(player.currentPosition)
-                Toast.makeText(this, "Semua bookmark dihapus", Toast.LENGTH_SHORT).show()
+                Toast.makeText(ctx, "Semua bookmark dihapus", Toast.LENGTH_SHORT).show()
             }
+        }
+
+        rebuildItems()
+
+        val scroll = android.widget.ScrollView(ctx).apply { addView(container) }
+        AlertDialog.Builder(this)
+            .setView(scroll)
             .setNegativeButton("Tutup", null)
             .show()
+    }
+
+    private fun updateBookmarkOverlay() {
+        b.bookmarkOverlay.update(bookmarks, player.duration, player.currentPosition)
     }
 
     // Refresh transcript setelah bookmark berubah
