@@ -53,6 +53,10 @@ class NoteDetailActivity : AppCompatActivity() {
     private var summaryEdited = false
     private var summaryDraft = ""
 
+    // Bookmark state
+    private var bookmarks = mutableListOf<Int>()  // list timestamp dalam ms
+    private var bookmarkIndex = -1                 // index bookmark terakhir di-jump
+
     // Current tab
     private var currentTab = 0  // 0=transcript, 1=summary, 2=mindmap
 
@@ -152,6 +156,7 @@ class NoteDetailActivity : AppCompatActivity() {
 
         if (n.hasAudio()) {
             setupAudioPlayer(n)
+            loadBookmarks(n)
             b.cardPlayer.isVisible = true
         } else {
             b.cardPlayer.isVisible = false
@@ -337,8 +342,8 @@ class NoteDetailActivity : AppCompatActivity() {
                         b.seekBar.progress = cur
                         b.tvCurrentTime.text = player.formatTime(cur)
                         b.tvTotalTime.text   = player.formatTime(total)
-                        // #5 highlight teks sesuai posisi audio
                         highlightTranscriptAt(cur, n)
+                        updateBookmarkButtonState(cur)
                     }
                 },
                 onComplete = {
@@ -375,6 +380,127 @@ class NoteDetailActivity : AppCompatActivity() {
             override fun onStartTrackingTouch(sb: SeekBar?) {}
             override fun onStopTrackingTouch(sb: SeekBar?) {}
         })
+
+        // Bookmark — tap: toggle tambah/hapus, long press: list semua
+        b.btnBookmark.setOnClickListener {
+            val posMs = player.currentPosition
+            val nearby = bookmarks.firstOrNull { Math.abs(it - posMs) <= 3000 }
+            if (nearby != null) {
+                // Hapus bookmark yang ada di dekat posisi ini
+                bookmarks.remove(nearby)
+                saveBookmarks()
+                refreshTranscriptBookmarks()
+                Toast.makeText(this, "Bookmark dihapus: ${formatMs(nearby)}", Toast.LENGTH_SHORT).show()
+            } else {
+                // Tambah bookmark baru
+                if (posMs > 0) {
+                    bookmarks.add(posMs)
+                    bookmarks.sort()
+                    saveBookmarks()
+                    refreshTranscriptBookmarks()
+                    Toast.makeText(this, "⭐ Ditandai: ${formatMs(posMs)}", Toast.LENGTH_SHORT).show()
+                }
+            }
+            updateBookmarkButtonState(posMs)
+        }
+
+        b.btnBookmark.setOnLongClickListener {
+            showBookmarkListDialog()
+            true
+        }
+
+        // Bookmark — jump ke berikutnya (loop)
+        b.btnBookmarkJump.setOnClickListener {
+            if (bookmarks.isEmpty()) return@setOnClickListener
+            val cur = player.currentPosition
+            val next = bookmarks.firstOrNull { it > cur + 500 } ?: bookmarks.first()
+            player.seekTo(next)
+            bookmarkIndex = bookmarks.indexOf(next)
+            Toast.makeText(this, "⭐ ${bookmarkIndex + 1}/${bookmarks.size}: ${formatMs(next)}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun formatMs(ms: Int): String {
+        val m = ms / 60000
+        val s = (ms % 60000) / 1000
+        return String.format("%02d:%02d", m, s)
+    }
+
+    // Update tampilan tombol ⭐ sesuai posisi audio (dekat bookmark atau tidak)
+    private fun updateBookmarkButtonState(posMs: Int) {
+        val nearby = bookmarks.firstOrNull { Math.abs(it - posMs) <= 3000 }
+        if (nearby != null) {
+            b.btnBookmark.text = "⭐ Hapus"
+            b.btnBookmark.setTextColor(0xFFB8920A.toInt())
+            b.btnBookmark.backgroundTintList =
+                android.content.res.ColorStateList.valueOf(0x26F5C400.toInt())
+        } else {
+            b.btnBookmark.text = "☆ Tandai"
+            b.btnBookmark.setTextColor(resources.getColor(R.color.text_primary, null))
+            b.btnBookmark.backgroundTintList = null
+        }
+        val count = bookmarks.size
+        b.btnBookmarkJump.isVisible = count > 0
+        b.btnBookmarkJump.text = "⭐ $count"
+    }
+
+    private fun saveBookmarks() {
+        val n = note ?: return
+        val json = gson.toJson(bookmarks)
+        val updated = n.copy(bookmarksJson = json, updatedAt = System.currentTimeMillis())
+        note = updated
+        vm.updateNote(updated)
+    }
+
+    private fun loadBookmarks(n: Note) {
+        try {
+            val type = object : TypeToken<List<Int>>() {}.type
+            bookmarks = gson.fromJson<List<Int>>(n.bookmarksJson, type)?.toMutableList()
+                ?: mutableListOf()
+        } catch (_: Exception) { bookmarks = mutableListOf() }
+        updateBookmarkButtonState(player.currentPosition)
+    }
+
+    // Dialog list semua bookmark — bisa jump atau hapus satu-satu
+    private fun showBookmarkListDialog() {
+        if (bookmarks.isEmpty()) {
+            Toast.makeText(this, "Belum ada bookmark", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val items = bookmarks.mapIndexed { i, ms ->
+            "⭐ ${i + 1}  —  ${formatMs(ms)}"
+        }.toTypedArray()
+
+        AlertDialog.Builder(this)
+            .setTitle("Daftar Bookmark")
+            .setItems(items) { _, which ->
+                val ms = bookmarks[which]
+                player.seekTo(ms)
+                Toast.makeText(this, "Jump ke ${formatMs(ms)}", Toast.LENGTH_SHORT).show()
+            }
+            .setNeutralButton("Hapus Semua") { _, _ ->
+                bookmarks.clear()
+                saveBookmarks()
+                refreshTranscriptBookmarks()
+                updateBookmarkButtonState(player.currentPosition)
+                Toast.makeText(this, "Semua bookmark dihapus", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Tutup", null)
+            .show()
+    }
+
+    // Refresh transcript setelah bookmark berubah
+    private fun refreshTranscriptBookmarks() {
+        val n = note ?: return
+        try {
+            val type = object : TypeToken<List<TranscriptEntry>>() {}.type
+            val entries: List<TranscriptEntry> = gson.fromJson(n.transcriptJson, type)
+            if (entries.isNotEmpty()) {
+                b.tvTranscript.text = buildRichTranscript(entries, n)
+            } else {
+                b.tvTranscript.text = buildSegmentedTranscript(n.plainText.ifBlank { "" })
+            }
+        } catch (_: Exception) {}
     }
 
     // #5 — Highlight teks transcript berdasarkan posisi audio
@@ -443,6 +569,20 @@ class NoteDetailActivity : AppCompatActivity() {
                     ssb.append("\n")
                 }
                 TranscriptEntry.TYPE_SPEECH -> {
+                    // Cek apakah ada bookmark di dekat timeMs entry ini
+                    if (entry.timeMs > 0) {
+                        val bm = bookmarks.firstOrNull { Math.abs(it - entry.timeMs) <= 3000 }
+                        if (bm != null) {
+                            ssb.append("\n")
+                            val bmStart = ssb.length
+                            ssb.append("⭐  ${formatMs(bm)} — Momen Penting")
+                            val bmEnd = ssb.length
+                            ssb.setSpan(ForegroundColorSpan(0xFFB8920A.toInt()), bmStart, bmEnd, 0)
+                            ssb.setSpan(StyleSpan(Typeface.BOLD), bmStart, bmEnd, 0)
+                            ssb.setSpan(RelativeSizeSpan(0.82f), bmStart, bmEnd, 0)
+                            ssb.append("\n")
+                        }
+                    }
                     if (entry.speakerIndex != lastSpeaker) {
                         lastSpeaker = entry.speakerIndex
                         ssb.append("\n")
@@ -489,13 +629,35 @@ class NoteDetailActivity : AppCompatActivity() {
     // ── Segmented transcript (plainText tanpa entries) ────────────────────
 
     private fun buildSegmentedTranscript(text: String): SpannableStringBuilder {
-        if (text == "(Belum ada transkripsi)") {
-            return SpannableStringBuilder(text)
+        if (text.isBlank() || text == "(Belum ada transkripsi)") {
+            return SpannableStringBuilder("(Belum ada transkripsi)")
         }
         val paragraphs = TranscriptSegmenter.segment(text)
         val ssb = SpannableStringBuilder()
         val dividerColor = 0xFFDDDDDD.toInt()
         val numColor     = 0xFF1DB954.toInt()
+
+        // Tampilkan daftar bookmark di atas transcript kalau ada
+        if (bookmarks.isNotEmpty()) {
+            val bmHeaderStart = ssb.length
+            ssb.append("⭐ Bookmark: ")
+            ssb.setSpan(StyleSpan(Typeface.BOLD), bmHeaderStart, ssb.length, 0)
+            ssb.setSpan(ForegroundColorSpan(0xFFB8920A.toInt()), bmHeaderStart, ssb.length, 0)
+            ssb.setSpan(RelativeSizeSpan(0.85f), bmHeaderStart, ssb.length, 0)
+            bookmarks.forEachIndexed { i, ms ->
+                val bmStart = ssb.length
+                ssb.append(formatMs(ms))
+                ssb.setSpan(ForegroundColorSpan(0xFFB8920A.toInt()), bmStart, ssb.length, 0)
+                ssb.setSpan(RelativeSizeSpan(0.82f), bmStart, ssb.length, 0)
+                if (i < bookmarks.lastIndex) ssb.append("  ·  ")
+            }
+            ssb.append("\n")
+            val divStart = ssb.length
+            ssb.append("─────────────────────")
+            ssb.setSpan(ForegroundColorSpan(dividerColor), divStart, ssb.length, 0)
+            ssb.setSpan(RelativeSizeSpan(0.6f), divStart, ssb.length, 0)
+            ssb.append("\n\n")
+        }
 
         paragraphs.forEachIndexed { index, para ->
             val numStart = ssb.length

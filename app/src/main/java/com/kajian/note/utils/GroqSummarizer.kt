@@ -24,7 +24,70 @@ object GroqSummarizer {
     private const val MODEL    = "llama-3.3-70b-versatile"
 
     /**
-     * Generate ringkasan dari teks transkripsi.
+     * Generate judul otomatis dari teks transkripsi via Groq llama.
+     * Dipanggil setelah note disimpan, judul diganti jika berhasil.
+     * @return Result<String> judul pendek (max 8 kata)
+     */
+    suspend fun autoTitle(
+        ctx: Context,
+        plainText: String,
+        detectedLang: String = "id"
+    ): Result<String> = withContext(Dispatchers.IO) {
+        val apiKey = GroqTranscriber.getApiKey(ctx)
+        if (apiKey.isBlank()) return@withContext Result.failure(Exception("NO_KEY"))
+
+        try {
+            val sample = plainText.take(800)
+            val lang = resolveLang(detectedLang, sample)
+            val instruction = when {
+                lang.startsWith("id") -> "Buat judul singkat (maksimal 7 kata) dalam Bahasa Indonesia untuk catatan kajian berikut. Hanya tulis judulnya saja, tanpa tanda kutip, tanpa penjelasan."
+                lang.startsWith("ar") -> "اكتب عنواناً موجزاً (7 كلمات كحد أقصى) لهذه الملاحظة. فقط العنوان بدون شرح."
+                else -> "Write a short title (max 7 words) for this study note. Only write the title, no quotes, no explanation."
+            }
+
+            val requestBody = JSONObject().apply {
+                put("model", MODEL)
+                put("max_tokens", 30)
+                put("temperature", 0.4)
+                put("messages", JSONArray().apply {
+                    put(JSONObject().apply {
+                        put("role", "user")
+                        put("content", "$instruction\n\nTeks:\n$sample")
+                    })
+                })
+            }
+
+            val conn = URL(GROQ_URL).openConnection() as HttpURLConnection
+            conn.apply {
+                requestMethod = "POST"
+                setRequestProperty("Authorization", "Bearer $apiKey")
+                setRequestProperty("Content-Type", "application/json")
+                doOutput = true
+                connectTimeout = 15_000
+                readTimeout    = 30_000
+            }
+            OutputStreamWriter(conn.outputStream, "UTF-8").use { it.write(requestBody.toString()) }
+
+            val code = conn.responseCode
+            if (code != 200) return@withContext Result.failure(Exception("HTTP $code"))
+
+            val raw = conn.inputStream.bufferedReader().readText()
+            val title = JSONObject(raw)
+                .getJSONArray("choices")
+                .getJSONObject(0)
+                .getJSONObject("message")
+                .getString("content")
+                .trim()
+                .trimStart('"', '\'').trimEnd('"', '\'')  // hapus tanda kutip kalau ada
+
+            Result.success(title)
+        } catch (e: Exception) {
+            Log.e(TAG, "autoTitle error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
      * @param ctx           Context untuk ambil API key
      * @param title         Judul catatan
      * @param plainText     Teks transkripsi

@@ -21,7 +21,8 @@ data class Note(
     val wordCount: Int = 0,
     val speakerCount: Int = 1,
     val audioPath: String = "",          // path ke file audio tersimpan (M4A/WAV)
-    val summaryText: String = ""         // ringkasan AI yang sudah digenerate + diedit user
+    val summaryText: String = "",        // ringkasan AI yang sudah digenerate + diedit user
+    val bookmarksJson: String = "[]"     // list timestamp bookmark dalam ms: [1230, 45000, ...]
 ) {
     fun getFormattedDate(): String {
         val sdf = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())

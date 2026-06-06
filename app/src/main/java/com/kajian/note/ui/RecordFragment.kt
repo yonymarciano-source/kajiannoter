@@ -103,9 +103,9 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
         vm.setLanguage(resolved)
 
         // Language chips
-        b.chipLangId.setOnClickListener   { selectLang("id-ID") }
-        b.chipLangEn.setOnClickListener   { selectLang("en-US") }
-        b.chipLangAr.setOnClickListener   { selectLang("ar-SA") }
+        b.chipLangId.setOnClickListener   { selectLang("id") }
+        b.chipLangEn.setOnClickListener   { selectLang("en") }
+        b.chipLangAr.setOnClickListener   { selectLang("ar") }
         b.chipLangAuto.setOnClickListener { selectLang("auto") }
 
         // Mode chips
@@ -150,11 +150,12 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
         val allChips = listOf(b.chipLangId, b.chipLangEn, b.chipLangAr, b.chipLangAuto)
         allChips.forEach { setChipInactive(it) }
         when (savedLang) {
-            "id-ID" -> setChipActive(b.chipLangId)
-            "en-US" -> setChipActive(b.chipLangEn)
-            "ar-SA" -> setChipActive(b.chipLangAr)
-            "auto"  -> setChipActive(b.chipLangAuto)
-            else    -> setChipActive(b.chipLangId)
+            "id", "id-ID" -> setChipActive(b.chipLangId)
+            "en", "en-US" -> setChipActive(b.chipLangEn)
+            "ar", "ar-SA" -> setChipActive(b.chipLangAr)
+            "auto"        -> setChipActive(b.chipLangAuto)
+            // Bahasa lain dari Settings → tampilkan Auto aktif dengan tanda
+            else          -> setChipActive(b.chipLangAuto)
         }
     }
 
@@ -495,6 +496,17 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
     private fun stopPulse() {
         pulseAnim?.cancel()
         b.fabRecord.scaleX = 1f; b.fabRecord.scaleY = 1f
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Sync chip bahasa kalau user ubah di Settings
+        val savedLang = prefs.getRecordingLanguage()
+        setLangChip(savedLang)
+        val resolved = if (savedLang == "auto")
+            LanguageDetector.detectDeviceLanguage(requireContext()) else savedLang
+        speech?.currentLanguage = resolved
+        vm.setLanguage(resolved)
     }
 
     override fun onDestroyView() {

@@ -9,6 +9,7 @@ import com.google.gson.Gson
 import com.kajian.note.db.NoteRepository
 import com.kajian.note.model.Note
 import com.kajian.note.model.TranscriptEntry
+import com.kajian.note.utils.GroqSummarizer
 import kotlinx.coroutines.launch
 
 class RecordViewModel(app: Application) : AndroidViewModel(app) {
@@ -97,6 +98,16 @@ class RecordViewModel(app: Application) : AndroidViewModel(app) {
                 )
                 val id = repo.insert(note)
                 _saveResult.postValue(id)
+
+                // Auto-title via Groq (background, silent fail)
+                try {
+                    val generatedTitle = GroqSummarizer.autoTitle(
+                        getApplication(), plainText, language
+                    ).getOrNull()
+                    if (!generatedTitle.isNullOrBlank()) {
+                        repo.update(note.copy(id = id, title = generatedTitle))
+                    }
+                } catch (_: Exception) { /* judul lama tetap dipakai */ }
             } catch (e: Exception) {
                 _error.postValue("Save failed: ${e.message}")
             }

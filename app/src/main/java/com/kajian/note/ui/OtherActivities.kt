@@ -201,17 +201,18 @@ class AppSettingsActivity : AppCompatActivity() {
                 .show()
         }
 
-        // Recording language
+        // Recording language — sinkron dengan chip di layar depan
         b.rowRecLang.setOnClickListener {
             val langs = PreferencesManager.RECORDING_LANGUAGES
             val names = langs.map { it.second }.toTypedArray()
             val current = langs.indexOfFirst { it.first == prefs.getRecordingLanguage() }.coerceAtLeast(0)
             AlertDialog.Builder(this)
-                .setTitle(getString(R.string.lang_audio))
+                .setTitle("🌐 Bahasa Audio")
                 .setSingleChoiceItems(names, current) { dlg, which ->
                     prefs.setRecordingLanguage(langs[which].first)
                     dlg.dismiss()
                     updateDisplay()
+                    Toast.makeText(this, "✅ ${langs[which].second} dipilih", Toast.LENGTH_SHORT).show()
                 }
                 .setNegativeButton(android.R.string.cancel, null)
                 .show()
@@ -340,7 +341,7 @@ class AppSettingsActivity : AppCompatActivity() {
         b.tvAppLang.text = PreferencesManager.APP_LANGUAGES.find { it.first == appLang }?.second ?: "English"
 
         val recLang = prefs.getRecordingLanguage()
-        b.tvRecLang.text = PreferencesManager.RECORDING_LANGUAGES.find { it.first == recLang }?.second ?: "Auto Detect"
+        b.tvRecLang.text = PreferencesManager.getLanguageLabel(recLang)
 
         val sens = prefs.getSpeakerChangeSensitivity()
         b.tvSpeakerSens.text = when (sens) {

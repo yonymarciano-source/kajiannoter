@@ -28,7 +28,7 @@ interface NoteDao {
     suspend fun delete(n: Note)
 }
 
-@Database(entities = [Note::class], version = 3, exportSchema = false)
+@Database(entities = [Note::class], version = 4, exportSchema = false)
 abstract class NoteDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
 
@@ -47,9 +47,15 @@ abstract class NoteDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE notes ADD COLUMN bookmarksJson TEXT NOT NULL DEFAULT '[]'")
+            }
+        }
+
         fun get(ctx: Context) = INSTANCE ?: synchronized(this) {
             Room.databaseBuilder(ctx.applicationContext, NoteDatabase::class.java, "kajian_v3_db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
                 .also { INSTANCE = it }
         }

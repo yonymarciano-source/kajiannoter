@@ -8,6 +8,7 @@ class PreferencesManager(context: Context) {
     fun getAppLanguage(): String = prefs.getString("app_lang", "en") ?: "en"
     fun setAppLanguage(lang: String) = prefs.edit().putString("app_lang", lang).apply()
 
+    // Satu sumber kebenaran untuk bahasa rekaman — dipakai chip depan DAN Settings
     fun getRecordingLanguage(): String = prefs.getString("rec_lang", "auto") ?: "auto"
     fun setRecordingLanguage(lang: String) = prefs.edit().putString("rec_lang", lang).apply()
 
@@ -40,15 +41,34 @@ class PreferencesManager(context: Context) {
             Triple("es", "Español", "Spanish")
         )
 
+        // Bahasa rekaman lengkap — dipakai chip depan (4 utama) dan Settings (semua)
         val RECORDING_LANGUAGES = listOf(
-            Pair("auto", "🌐 Auto Detect"),
-            Pair("id-ID", "🇮🇩 Indonesia"),
-            Pair("en-US", "🇺🇸 English"),
-            Pair("ar-SA", "🌙 العربية"),
-            Pair("ko-KR", "🇰🇷 한국어"),
-            Pair("ja-JP", "🇯🇵 日本語"),
-            Pair("it-IT", "🇮🇹 Italiano"),
-            Pair("es-ES", "🇪🇸 Español")
+            Pair("auto",  "🌐 Auto Detect"),
+            Pair("id",    "🇮🇩 Indonesia"),
+            Pair("en",    "🇺🇸 English"),
+            Pair("ar",    "🌙 Arab"),
+            Pair("ms",    "🇲🇾 Melayu"),
+            Pair("ko",    "🇰🇷 Korean"),
+            Pair("ja",    "🇯🇵 Japanese"),
+            Pair("zh",    "🇨🇳 Chinese"),
+            Pair("fr",    "🇫🇷 French"),
+            Pair("de",    "🇩🇪 German"),
+            Pair("it",    "🇮🇹 Italian"),
+            Pair("es",    "🇪🇸 Spanish"),
+            Pair("tr",    "🇹🇷 Turkish"),
+            Pair("ru",    "🇷🇺 Russian"),
+            Pair("hi",    "🇮🇳 Hindi"),
+            Pair("pt",    "🇵🇹 Portuguese"),
+            Pair("nl",    "🇳🇱 Dutch"),
+            Pair("pl",    "🇵🇱 Polish"),
+            Pair("sv",    "🇸🇪 Swedish"),
+            Pair("uk",    "🇺🇦 Ukrainian")
         )
+
+        // 4 bahasa utama yang tampil sebagai chip di layar depan
+        val MAIN_CHIP_LANGUAGES = listOf("auto", "id", "en", "ar")
+
+        fun getLanguageLabel(code: String): String =
+            RECORDING_LANGUAGES.find { it.first == code }?.second ?: "🌐 Auto Detect"
     }
 }
