@@ -157,17 +157,19 @@ class NoteDetailActivity : AppCompatActivity() {
             b.cardPlayer.isVisible = false
         }
 
-        // Transcript panel (#3 fix — teks selalu muncul)
+        // Transcript panel — dengan segmentasi per 3 kalimat
         try {
             val type = object : TypeToken<List<TranscriptEntry>>() {}.type
             val entries: List<TranscriptEntry> = gson.fromJson(n.transcriptJson, type)
             if (entries.isNotEmpty()) {
                 b.tvTranscript.text = buildRichTranscript(entries, n)
             } else {
-                b.tvTranscript.text = n.plainText.ifBlank { "(Belum ada transkripsi)" }
+                val raw = n.plainText.ifBlank { "(Belum ada transkripsi)" }
+                b.tvTranscript.text = buildSegmentedTranscript(raw)
             }
         } catch (e: Exception) {
-            b.tvTranscript.text = n.plainText.ifBlank { "(Belum ada transkripsi)" }
+            val raw = n.plainText.ifBlank { "(Belum ada transkripsi)" }
+            b.tvTranscript.text = buildSegmentedTranscript(raw)
         }
 
         b.btnShare.setOnClickListener  { shareNote(n) }
@@ -420,6 +422,7 @@ class NoteDetailActivity : AppCompatActivity() {
             speakerOverrides[e.speakerIndex.toString()] ?: e.speakerName
 
         var lastSpeaker = -1
+        var speechEntryCount = 0
         entries.forEach { entry ->
             when (entry.type) {
                 TranscriptEntry.TYPE_TIMESTAMP -> {
@@ -450,23 +453,67 @@ class NoteDetailActivity : AppCompatActivity() {
                         ssb.setSpan(ForegroundColorSpan(entry.getSpeakerColor()), ls, le, 0)
                         ssb.setSpan(RelativeSizeSpan(0.9f), ls, le, 0)
                         ssb.append("  ")
-                        val ts = ssb.length
+                        val ts2 = ssb.length
                         ssb.append(entry.getFormattedTime())
-                        val te = ssb.length
-                        ssb.setSpan(ForegroundColorSpan(0xFFAAAAAA.toInt()), ts, te, 0)
-                        ssb.setSpan(RelativeSizeSpan(0.8f), ts, te, 0)
+                        val te2 = ssb.length
+                        ssb.setSpan(ForegroundColorSpan(0xFFAAAAAA.toInt()), ts2, te2, 0)
+                        ssb.setSpan(RelativeSizeSpan(0.8f), ts2, te2, 0)
                         ssb.append("\n")
+                        speechEntryCount = 0
                     }
                     val ts = ssb.length
                     ssb.append(entry.text)
                     val te = ssb.length
-                    // #5 highlight aktif
                     if (entry == highlightEntry) {
                         ssb.setSpan(BackgroundColorSpan(0x331DB954.toInt()), ts, te, 0)
                         ssb.setSpan(StyleSpan(Typeface.BOLD), ts, te, 0)
                     }
                     ssb.append(" ")
+                    speechEntryCount++
+                    // Divider setiap 3 entry speech
+                    if (speechEntryCount % 3 == 0) {
+                        ssb.append("\n")
+                        val divStart = ssb.length
+                        ssb.append("─────────────────────")
+                        val divEnd = ssb.length
+                        ssb.setSpan(ForegroundColorSpan(0xFFDDDDDD.toInt()), divStart, divEnd, 0)
+                        ssb.setSpan(RelativeSizeSpan(0.6f), divStart, divEnd, 0)
+                        ssb.append("\n")
+                    }
                 }
+            }
+        }
+        return ssb
+    }
+
+    // ── Segmented transcript (plainText tanpa entries) ────────────────────
+
+    private fun buildSegmentedTranscript(text: String): SpannableStringBuilder {
+        if (text == "(Belum ada transkripsi)") {
+            return SpannableStringBuilder(text)
+        }
+        val paragraphs = TranscriptSegmenter.segment(text)
+        val ssb = SpannableStringBuilder()
+        val dividerColor = 0xFFDDDDDD.toInt()
+        val numColor     = 0xFF1DB954.toInt()
+
+        paragraphs.forEachIndexed { index, para ->
+            val numStart = ssb.length
+            ssb.append("${index + 1}")
+            val numEnd = ssb.length
+            ssb.setSpan(ForegroundColorSpan(numColor), numStart, numEnd, 0)
+            ssb.setSpan(RelativeSizeSpan(0.72f), numStart, numEnd, 0)
+            ssb.setSpan(StyleSpan(Typeface.BOLD), numStart, numEnd, 0)
+            ssb.append("  ")
+            ssb.append(para)
+            if (index < paragraphs.lastIndex) {
+                ssb.append("\n\n")
+                val divStart = ssb.length
+                ssb.append("─────────────────────")
+                val divEnd = ssb.length
+                ssb.setSpan(ForegroundColorSpan(dividerColor), divStart, divEnd, 0)
+                ssb.setSpan(RelativeSizeSpan(0.6f), divStart, divEnd, 0)
+                ssb.append("\n\n")
             }
         }
         return ssb
