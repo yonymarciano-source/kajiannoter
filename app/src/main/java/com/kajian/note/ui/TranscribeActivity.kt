@@ -155,7 +155,6 @@ class TranscribeActivity : AppCompatActivity() {
                         }
                     )
                 }
-                )
             }
             isProcessing = false
 
