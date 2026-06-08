@@ -53,7 +53,7 @@
 • Kembali ke pembicara sebelumnya → tap ◀ PREV
 • Long press nama speaker untuk rename
 • Teks bisa diedit langsung setelah recording</string>
-</resources>
+
     <!-- v4.0 strings -->
     <string name="login_title">Masuk ke KajianNote</string>
     <string name="login_tagline">Apps untuk para penuntut ilmu</string>
@@ -67,3 +67,4 @@
     <string name="folder_all">Semua Catatan</string>
     <string name="folder_new">Folder Baru</string>
     <string name="upgrade_now">Upgrade Sekarang</string>
+</resources>
