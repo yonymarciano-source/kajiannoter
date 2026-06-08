@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "466508064963-0ngkj1r9glt19td60vjae2jnmm3pamk9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kajian.note",
+            "certificate_hash": "89a7f9e2ed79570c9e9723209dd40b68c15c12f3"
+          }
+        },
+        {
           "client_id": "466508064963-sej1hrf9529rqpno291crf4vou1t0p14.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
