@@ -54,3 +54,16 @@
 • Long press nama speaker untuk rename
 • Teks bisa diedit langsung setelah recording</string>
 </resources>
+    <!-- v4.0 strings -->
+    <string name="login_title">Masuk ke KajianNote</string>
+    <string name="login_tagline">Apps untuk para penuntut ilmu</string>
+    <string name="login_google">Masuk dengan Google</string>
+    <string name="login_skip">Lanjut tanpa akun</string>
+    <string name="tier_free">Gratis</string>
+    <string name="tier_premium">Premium</string>
+    <string name="tier_subscriber">Subscriber</string>
+    <string name="paywall_limit">Batas catatan gratis tercapai</string>
+    <string name="note_limit_reached">Kamu sudah punya 10 catatan (batas gratis). Upgrade untuk catatan tak terbatas.</string>
+    <string name="folder_all">Semua Catatan</string>
+    <string name="folder_new">Folder Baru</string>
+    <string name="upgrade_now">Upgrade Sekarang</string>

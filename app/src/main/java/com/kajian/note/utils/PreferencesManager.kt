@@ -72,3 +72,7 @@ class PreferencesManager(context: Context) {
             RECORDING_LANGUAGES.find { it.first == code }?.second ?: "🌐 Auto Detect"
     }
 }
+
+    // v4.0 — selected folder for notes list
+    fun getSelectedFolderId(): Long = prefs.getLong("selected_folder_id", -1L) // -1 = semua
+    fun setSelectedFolderId(id: Long) = prefs.edit().putLong("selected_folder_id", id).apply()

@@ -5,122 +5,67 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.kajian.note.db.NoteRepository
+import com.kajian.note.model.Folder
 import com.kajian.note.model.Note
-import com.kajian.note.model.TranscriptEntry
-import com.kajian.note.utils.GroqSummarizer
+import com.kajian.note.utils.UserManager
 import kotlinx.coroutines.launch
 
 class RecordViewModel(app: Application) : AndroidViewModel(app) {
 
     private val repo = NoteRepository(app)
-    val allNotes: LiveData<List<Note>> = repo.all
-    fun searchNotes(q: String) = repo.search(q)
 
-    // ── Recording state ───────────────────────────────────────────────────
+    val allNotes: LiveData<List<Note>> = repo.all
+    val allFolders: LiveData<List<Folder>> = repo.allFolders
+
+    // Current transcript being built
+    private val _transcript = MutableLiveData<String>("")
+    val transcript: LiveData<String> = _transcript
+
     private val _isRecording = MutableLiveData(false)
     val isRecording: LiveData<Boolean> = _isRecording
 
-    private val _language = MutableLiveData("auto")
-    val language: LiveData<String> = _language
+    // Premium tier state
+    private val _tier = MutableLiveData(UserManager.Tier.FREE)
+    val tier: LiveData<UserManager.Tier> = _tier
 
-    private val _fullText = MutableLiveData("")
-    val fullText: LiveData<String> = _fullText
-
-    private val _partial = MutableLiveData("")
-    val partial: LiveData<String> = _partial
-
-    private val _rms = MutableLiveData(0f)
-    val rms: LiveData<Float> = _rms
-
-    private val _currentSpeaker = MutableLiveData("Speaker A")
-    val currentSpeaker: LiveData<String> = _currentSpeaker
-
-    private val _speakerChangePrompt = MutableLiveData<Int?>(null)
-    val speakerChangePrompt: LiveData<Int?> = _speakerChangePrompt
-
-    private val _saveResult = MutableLiveData<Long>(-1L)
-    val saveResult: LiveData<Long> = _saveResult
-
-    private val _error = MutableLiveData<String>()
-    val error: LiveData<String> = _error
-
-    var recordingStartMs = 0L
-
-    // ── Setters ────────────────────────────────────────────────────────────
-
-    fun setRecording(v: Boolean) {
-        _isRecording.value = v
-        if (v) recordingStartMs = System.currentTimeMillis()
-    }
-
-    fun setLanguage(lang: String) { _language.value = lang }
-    fun updateText(t: String) { _fullText.value = t }
-    fun updatePartial(t: String) { _partial.value = t }
-    fun updateRms(r: Float) { _rms.value = r }
-    fun updateSpeaker(name: String) { _currentSpeaker.value = name }
-    fun promptSpeakerChange(newIdx: Int) { _speakerChangePrompt.value = newIdx }
-    fun dismissSpeakerPrompt() { _speakerChangePrompt.value = null }
-
-    // ── Save ───────────────────────────────────────────────────────────────
-
-    fun saveNote(
-        title: String,
-        entries: List<TranscriptEntry>,
-        plainText: String,
-        language: String,
-        speakerNames: Map<Int, String>,
-        durationMs: Long,
-        audioPath: String = ""
-    ) {
-        if (plainText.isBlank() && entries.isEmpty()) {
-            _error.value = "Nothing to save — transcript is empty"
-            return
-        }
+    init {
+        // Load tier on init
         viewModelScope.launch {
-            try {
-                val gson = Gson()
-                val speakerCount = (entries.mapNotNull {
-                    if (it.type == TranscriptEntry.TYPE_SPEECH) it.speakerIndex else null
-                }.toSet().size).coerceAtLeast(1)
-
-                val note = Note(
-                    title = title.ifBlank { autoTitle(plainText) },
-                    transcriptJson = gson.toJson(entries),
-                    plainText = plainText.trim(),
-                    detectedLanguage = language,
-                    speakerNamesJson = gson.toJson(speakerNames),
-                    durationMs = durationMs,
-                    wordCount = plainText.trim().split("\\s+".toRegex()).filter { it.isNotEmpty() }.size,
-                    speakerCount = speakerCount,
-                    audioPath = audioPath
-                )
-                val id = repo.insert(note)
-                _saveResult.postValue(id)
-
-                // Auto-title via Groq (background, silent fail)
-                try {
-                    val generatedTitle = GroqSummarizer.autoTitle(
-                        getApplication(), plainText, language
-                    ).getOrNull()
-                    if (!generatedTitle.isNullOrBlank()) {
-                        repo.update(note.copy(id = id, title = generatedTitle))
-                    }
-                } catch (_: Exception) { /* judul lama tetap dipakai */ }
-            } catch (e: Exception) {
-                _error.postValue("Save failed: ${e.message}")
-            }
+            _tier.value = UserManager.getTier()
         }
     }
 
+    fun refreshTier() {
+        viewModelScope.launch {
+            _tier.value = UserManager.getTier(forceRefresh = true)
+        }
+    }
+
+    fun setRecording(recording: Boolean) { _isRecording.value = recording }
+    fun appendTranscript(text: String) {
+        _transcript.value = (_transcript.value ?: "") + " " + text
+    }
+    fun clearTranscript() { _transcript.value = "" }
+    fun setTranscript(text: String) { _transcript.value = text }
+
+    fun searchNotes(q: String) = repo.search(q)
+    fun getNotesByFolder(folderId: Long) = repo.getByFolder(folderId)
+
+    fun saveNote(note: Note) = viewModelScope.launch { repo.insert(note) }
     fun updateNote(note: Note) = viewModelScope.launch { repo.update(note) }
     fun deleteNote(note: Note) = viewModelScope.launch { repo.delete(note) }
 
-    private fun autoTitle(text: String): String {
-        val words = text.trim().split("\\s+".toRegex())
-        return words.take(7).joinToString(" ").let {
-            if (words.size > 7) "$it…" else it
-        }
+    fun createFolder(folder: Folder) = viewModelScope.launch { repo.insertFolder(folder) }
+    fun updateFolder(folder: Folder) = viewModelScope.launch { repo.updateFolder(folder) }
+    fun deleteFolder(folder: Folder) = viewModelScope.launch { repo.deleteFolder(folder) }
+
+    /**
+     * Cek apakah user bisa tambah catatan baru.
+     * Return true = boleh, false = perlu upgrade.
+     */
+    suspend fun canAddNote(): Boolean {
+        val count = repo.countAll()
+        return UserManager.canAddNote(count)
     }
 }

@@ -20,9 +20,11 @@ data class Note(
     val durationMs: Long = 0,
     val wordCount: Int = 0,
     val speakerCount: Int = 1,
-    val audioPath: String = "",          // path ke file audio tersimpan (M4A/WAV)
-    val summaryText: String = "",        // ringkasan AI yang sudah digenerate + diedit user
-    val bookmarksJson: String = "[]"     // list timestamp bookmark dalam ms: [1230, 45000, ...]
+    val audioPath: String = "",
+    val summaryText: String = "",
+    val bookmarksJson: String = "[]",
+    val folderId: Long = 0,          // 0 = Semua Catatan (default)
+    val isPremiumContent: Boolean = false  // flag konten premium (diarization etc)
 ) {
     fun getFormattedDate(): String {
         val sdf = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
@@ -63,3 +65,14 @@ data class Note(
     fun hasAudio(): Boolean = audioPath.isNotBlank() &&
         java.io.File(audioPath).exists()
 }
+
+@Entity(tableName = "folders")
+data class Folder(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val name: String = "",
+    val emoji: String = "📁",
+    val colorHex: String = "#00E676",
+    val createdAt: Long = System.currentTimeMillis(),
+    val noteCount: Int = 0
+)

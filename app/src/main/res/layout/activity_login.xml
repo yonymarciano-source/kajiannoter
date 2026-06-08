@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dark"
+    android:padding="32dp">
+
+    <!-- Logo / Ilustrasi -->
+    <TextView
+        android:id="@+id/tvLogo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🕌"
+        android:textSize="72sp"
+        app:layout_constraintBottom_toTopOf="@id/tvAppName"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintVertical_bias="0.35"/>
+
+    <TextView
+        android:id="@+id/tvAppName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="KajianNote"
+        android:textColor="@color/text_primary"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.02"
+        app:layout_constraintBottom_toTopOf="@id/tvTagline"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvLogo"/>
+
+    <TextView
+        android:id="@+id/tvTagline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Apps untuk para penuntut ilmu"
+        android:textColor="@color/primary_green"
+        android:textSize="14sp"
+        android:letterSpacing="0.05"
+        app:layout_constraintBottom_toTopOf="@id/tvDesc"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvAppName"/>
+
+    <TextView
+        android:id="@+id/tvDesc"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="Rekam kajian, transkripsi otomatis, simpan selamanya. Masuk untuk sinkronisasi catatan di semua perangkat."
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:lineSpacingMultiplier="1.5"
+        app:layout_constraintBottom_toTopOf="@id/btnGoogleSignIn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvTagline"/>
+
+    <!-- Google Sign-In Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnGoogleSignIn"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="48dp"
+        android:text="  Masuk dengan Google"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:textColor="@color/bg_dark"
+        app:backgroundTint="@color/primary_green"
+        app:cornerRadius="16dp"
+        app:icon="@drawable/ic_google"
+        app:iconSize="20dp"
+        app:iconTint="@color/bg_dark"
+        app:layout_constraintBottom_toTopOf="@id/btnSkip"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvDesc"/>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        android:indeterminateTint="@color/primary_green"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnGoogleSignIn"/>
+
+    <!-- Skip / Guest mode -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSkip"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Lanjut tanpa akun"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp"
+        app:layout_constraintBottom_toTopOf="@id/tvPrivacy"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/progressBar"/>
+
+    <TextView
+        android:id="@+id/tvPrivacy"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:text="Dengan masuk, kamu menyetujui syarat penggunaan dan kebijakan privasi kami."
+        android:textColor="@color/text_tertiary"
+        android:textSize="11sp"
+        android:gravity="center"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnSkip"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
