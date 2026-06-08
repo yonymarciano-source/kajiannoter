@@ -4,12 +4,22 @@ workflows:
     max_build_duration: 30
     environment:
       java: 17
+      groups:
+        - android_signing
     scripts:
       - name: Set gradlew permission
         script: chmod +x gradlew
-      - name: Print SHA-1 fingerprint
-        script: keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android 2>/dev/null | grep SHA1
+      - name: Setup keystore
+        script: |
+          echo $CM_KEYSTORE | base64 --decode > $CM_BUILD_DIR/debug.keystore
+          keytool -list -v -keystore $CM_BUILD_DIR/debug.keystore -alias $CM_KEY_ALIAS -storepass $CM_KEYSTORE_PASSWORD -keypass $CM_KEY_PASSWORD 2>/dev/null | grep SHA1
       - name: Build debug APK
-        script: ./gradlew assembleDebug --stacktrace
+        script: |
+          ./gradlew assembleDebug \
+            -Pandroid.injected.signing.store.file=$CM_BUILD_DIR/debug.keystore \
+            -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$CM_KEY_PASSWORD \
+            --stacktrace
     artifacts:
       - app/build/outputs/apk/debug/app-debug.apk
