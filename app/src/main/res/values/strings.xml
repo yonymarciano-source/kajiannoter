@@ -67,4 +67,5 @@
     <string name="folder_all">Semua Catatan</string>
     <string name="folder_new">Folder Baru</string>
     <string name="upgrade_now">Upgrade Sekarang</string>
+    <string name="default_web_client_id">YOUR_WEB_CLIENT_ID</string>
 </resources>

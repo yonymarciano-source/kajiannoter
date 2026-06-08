@@ -69,3 +69,33 @@ class RecordViewModel(app: Application) : AndroidViewModel(app) {
         return UserManager.canAddNote(count)
     }
 }
+
+    // ── v3.x compatibility helpers ─────────────────────────────────────────────
+    private val _language = MutableLiveData("id-ID")
+    val language: LiveData<String> = _language
+    fun setLanguage(lang: String) { _language.value = lang }
+    fun updateText(text: String) { _transcript.value = text }
+
+    fun saveNote(
+        title: String,
+        entries: List<Any>,
+        plainText: String,
+        language: String,
+        speakerNames: Map<Any, Any>,
+        durationMs: Long,
+        audioPath: String
+    ) = viewModelScope.launch {
+        val note = com.kajian.note.model.Note(
+            title = title,
+            plainText = plainText,
+            detectedLanguage = language,
+            durationMs = durationMs,
+            audioPath = audioPath,
+            speakerNamesJson = com.google.gson.Gson().toJson(speakerNames),
+            transcriptJson = com.google.gson.Gson().toJson(entries)
+        )
+        repo.insert(note)
+    }
+
+    val saveResult = MutableLiveData<Long>(0L)
+    val error = MutableLiveData<String>("")
