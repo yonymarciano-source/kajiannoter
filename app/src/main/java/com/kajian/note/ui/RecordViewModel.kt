@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
 import com.kajian.note.db.NoteRepository
 import com.kajian.note.model.Folder
 import com.kajian.note.model.Note
@@ -14,68 +15,59 @@ import kotlinx.coroutines.launch
 class RecordViewModel(app: Application) : AndroidViewModel(app) {
 
     private val repo = NoteRepository(app)
+    private val gson = Gson()
 
+    // ── Notes & Folders ───────────────────────────────────────────────────────
     val allNotes: LiveData<List<Note>> = repo.all
     val allFolders: LiveData<List<Folder>> = repo.allFolders
 
-    // Current transcript being built
+    // ── Transcript state ──────────────────────────────────────────────────────
     private val _transcript = MutableLiveData<String>("")
     val transcript: LiveData<String> = _transcript
 
+    // ── Recording state ───────────────────────────────────────────────────────
     private val _isRecording = MutableLiveData(false)
     val isRecording: LiveData<Boolean> = _isRecording
 
-    // Premium tier state
+    // ── Language ──────────────────────────────────────────────────────────────
+    private val _language = MutableLiveData("id-ID")
+    val language: LiveData<String> = _language
+
+    // ── Save result & error (for RecordFragment observers) ────────────────────
+    val saveResult = MutableLiveData<Long>(0L)
+    val error = MutableLiveData<String>("")
+
+    // ── Premium tier ──────────────────────────────────────────────────────────
     private val _tier = MutableLiveData(UserManager.Tier.FREE)
     val tier: LiveData<UserManager.Tier> = _tier
 
     init {
-        // Load tier on init
         viewModelScope.launch {
             _tier.value = UserManager.getTier()
         }
     }
 
-    fun refreshTier() {
-        viewModelScope.launch {
-            _tier.value = UserManager.getTier(forceRefresh = true)
-        }
+    // ── Public methods ────────────────────────────────────────────────────────
+
+    fun refreshTier() = viewModelScope.launch {
+        _tier.value = UserManager.getTier(forceRefresh = true)
     }
 
     fun setRecording(recording: Boolean) { _isRecording.value = recording }
+
+    fun setLanguage(lang: String) { _language.value = lang }
+
+    fun updateText(text: String) { _transcript.value = text }
+
     fun appendTranscript(text: String) {
         _transcript.value = (_transcript.value ?: "") + " " + text
     }
+
     fun clearTranscript() { _transcript.value = "" }
+
     fun setTranscript(text: String) { _transcript.value = text }
 
-    fun searchNotes(q: String) = repo.search(q)
-    fun getNotesByFolder(folderId: Long) = repo.getByFolder(folderId)
-
-    fun saveNote(note: Note) = viewModelScope.launch { repo.insert(note) }
-    fun updateNote(note: Note) = viewModelScope.launch { repo.update(note) }
-    fun deleteNote(note: Note) = viewModelScope.launch { repo.delete(note) }
-
-    fun createFolder(folder: Folder) = viewModelScope.launch { repo.insertFolder(folder) }
-    fun updateFolder(folder: Folder) = viewModelScope.launch { repo.updateFolder(folder) }
-    fun deleteFolder(folder: Folder) = viewModelScope.launch { repo.deleteFolder(folder) }
-
-    /**
-     * Cek apakah user bisa tambah catatan baru.
-     * Return true = boleh, false = perlu upgrade.
-     */
-    suspend fun canAddNote(): Boolean {
-        val count = repo.countAll()
-        return UserManager.canAddNote(count)
-    }
-}
-
-    // ── v3.x compatibility helpers ─────────────────────────────────────────────
-    private val _language = MutableLiveData("id-ID")
-    val language: LiveData<String> = _language
-    fun setLanguage(lang: String) { _language.value = lang }
-    fun updateText(text: String) { _transcript.value = text }
-
+    // ── Save note (v3.x style — called from RecordFragment) ───────────────────
     fun saveNote(
         title: String,
         entries: List<Any>,
@@ -85,17 +77,37 @@ class RecordViewModel(app: Application) : AndroidViewModel(app) {
         durationMs: Long,
         audioPath: String
     ) = viewModelScope.launch {
-        val note = com.kajian.note.model.Note(
-            title = title,
-            plainText = plainText,
+        val note = Note(
+            title           = title,
+            plainText       = plainText,
             detectedLanguage = language,
-            durationMs = durationMs,
-            audioPath = audioPath,
-            speakerNamesJson = com.google.gson.Gson().toJson(speakerNames),
-            transcriptJson = com.google.gson.Gson().toJson(entries)
+            durationMs      = durationMs,
+            audioPath       = audioPath,
+            speakerNamesJson = gson.toJson(speakerNames),
+            transcriptJson  = gson.toJson(entries)
         )
-        repo.insert(note)
+        val id = repo.insert(note)
+        saveResult.postValue(id)
     }
 
-    val saveResult = MutableLiveData<Long>(0L)
-    val error = MutableLiveData<String>("")
+    // ── Save note (v4.0 style — direct Note object) ───────────────────────────
+    fun saveNote(note: Note) = viewModelScope.launch {
+        val id = repo.insert(note)
+        saveResult.postValue(id)
+    }
+
+    fun updateNote(note: Note) = viewModelScope.launch { repo.update(note) }
+    fun deleteNote(note: Note) = viewModelScope.launch { repo.delete(note) }
+
+    fun searchNotes(q: String) = repo.search(q)
+    fun getNotesByFolder(folderId: Long) = repo.getByFolder(folderId)
+
+    fun createFolder(folder: Folder) = viewModelScope.launch { repo.insertFolder(folder) }
+    fun updateFolder(folder: Folder) = viewModelScope.launch { repo.updateFolder(folder) }
+    fun deleteFolder(folder: Folder) = viewModelScope.launch { repo.deleteFolder(folder) }
+
+    suspend fun canAddNote(): Boolean {
+        val count = repo.countAll()
+        return UserManager.canAddNote(count)
+    }
+}

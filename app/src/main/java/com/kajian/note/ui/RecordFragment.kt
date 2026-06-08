@@ -423,7 +423,7 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
     }
 
     private fun observeVM() {
-        vm.saveResult.observe(viewLifecycleOwner) { id ->
+        vm.saveResult.observe(viewLifecycleOwner) { id: Long ->
             if (id > 0) {
                 Toast.makeText(requireContext(), getString(R.string.save_success), Toast.LENGTH_SHORT).show()
                 b.etTranscript.setText("")
@@ -436,7 +436,7 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
             }
         }
         vm.error.observe(viewLifecycleOwner) { msg ->
-            if (!msg.isNullOrBlank()) Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+            if (!msg.isNullOrBlank()) Toast.makeText(requireContext(), msg.toString(), Toast.LENGTH_LONG).show()
         }
     }
 
