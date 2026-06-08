@@ -7,6 +7,8 @@ workflows:
     scripts:
       - name: Set gradlew permission
         script: chmod +x gradlew
+      - name: Print SHA-1 fingerprint
+        script: keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android 2>/dev/null | grep SHA1
       - name: Build debug APK
         script: ./gradlew assembleDebug --stacktrace
     artifacts:
