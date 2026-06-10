@@ -109,7 +109,7 @@ class MainActivity : AppCompatActivity() {
     private fun refreshTierBadge() {
         val user = FirebaseAuth.getInstance().currentUser ?: return
         CoroutineScope(Dispatchers.IO).launch {
-            val tier = UserManager.getUserTier() // "FREE", "PREMIUM", "SUBSCRIBER"
+            val tier = UserManager.getTier().name
             withContext(Dispatchers.Main) {
                 binding.tvTierBadge.visibility = View.VISIBLE
                 binding.tvTierBadge.text = tier
@@ -134,7 +134,7 @@ class MainActivity : AppCompatActivity() {
         val email = user?.email ?: "Belum login"
 
         CoroutineScope(Dispatchers.IO).launch {
-            val tier = if (isGuest) "FREE" else (UserManager.getUserTier() ?: "FREE")
+            val tier = if (isGuest) "FREE" else (UserManager.getTier().name)
             withContext(Dispatchers.Main) {
                 val tierLabel = when (tier) {
                     "PREMIUM"    -> "⭐ Premium"
