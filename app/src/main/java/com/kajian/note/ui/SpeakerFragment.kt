@@ -228,9 +228,9 @@ class SpeakerFragment : Fragment() {
             "speaker_${System.currentTimeMillis()}.wav"
         )
 
-        audioRec = AudioRecordManager(requireContext())
-        audioRec?.startRecording(outputFile.absolutePath)
-        savedAudioPath = outputFile.absolutePath
+        audioRec = AudioRecordManager { /* amplitude callback unused */ }
+        val recFile = audioRec!!.start(requireContext().cacheDir)
+        savedAudioPath = recFile.absolutePath
 
         isRecording = true
         recordingStartMs = SystemClock.elapsedRealtime()
@@ -255,7 +255,7 @@ class SpeakerFragment : Fragment() {
     }
 
     private fun stopRecording() {
-        audioRec?.stopRecording()
+        audioRec?.stop { }
         isRecording = false
         stopTimer()
 
@@ -368,12 +368,13 @@ class SpeakerFragment : Fragment() {
 
             val note = Note(
                 title = "Kajian ${SimpleDateFormat("dd/MM/yy HH:mm", Locale.getDefault()).format(Date())}",
-                transcript = sb.toString().trim(),
-                summary = "",
-                language = "id",
-                duration = (SystemClock.elapsedRealtime() - recordingStartMs) / 1000,
+                plainText = sb.toString().trim(),
+                summaryText = "",
+                detectedLanguage = "id",
+                durationMs = SystemClock.elapsedRealtime() - recordingStartMs,
                 wordCount = result.fullText.split(" ").size,
-                speakerCount = result.speakerCount
+                speakerCount = result.speakerCount,
+                isPremiumContent = true
             )
 
             lifecycleScope.launch {
@@ -419,7 +420,7 @@ class SpeakerFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         stopTimer()
-        audioRec?.stopRecording()
+        audioRec?.stop { }
         _b = null
     }
 }
