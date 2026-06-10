@@ -31,8 +31,8 @@ class PaywallActivity : AppCompatActivity() {
         const val REASON_TRANSLATION = "translation"
 
         // Ganti dengan link Midtrans atau WhatsApp kamu
-        const val LINK_ONE_TIME = "https://wa.me/628XXXXXXXXXX?text=Halo,%20saya%20mau%20beli%20KajianNote%20Premium%20Rp49.000"
-        const val LINK_SUBSCRIBE = "https://wa.me/628XXXXXXXXXX?text=Halo,%20saya%20mau%20langganan%20KajianNote%20Rp15.000/bulan"
+        const val LINK_ONE_TIME = "https://wa.me/6287872390906?text=Halo,%20saya%20mau%20beli%20KajianNote%20Premium%20Rp49.000"
+        const val LINK_SUBSCRIBE = "https://wa.me/6287872390906?text=Halo,%20saya%20mau%20langganan%20KajianNote%20Rp15.000/bulan"
     }
 
     private lateinit var binding: ActivityPaywallBinding
