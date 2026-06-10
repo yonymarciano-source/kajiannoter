@@ -1,23 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/bg_dark">
-    <com.google.android.material.appbar.AppBarLayout android:id="@+id/appBar"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:background="@color/surface_dark" app:elevation="0dp">
-        <androidx.appcompat.widget.Toolbar android:id="@+id/toolbar"
-            android:layout_width="match_parent" android:layout_height="?attr/actionBarSize"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dark">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface_dark"
+        app:elevation="0dp">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/surface_dark">
+
+            <!-- App title (kiri) -->
+            <TextView
+                android:id="@+id/tvToolbarTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/app_name"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:fontFamily="sans-serif-medium" />
+
+            <!-- Avatar + tier badge (kanan) -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingEnd="4dp">
+
+                <!-- Tier badge -->
+                <TextView
+                    android:id="@+id/tvTierBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:paddingTop="3dp"
+                    android:paddingBottom="3dp"
+                    android:text="FREE"
+                    android:textSize="10sp"
+                    android:textColor="#FFFFFF"
+                    android:fontFamily="sans-serif-medium"
+                    android:background="@drawable/bg_tier_badge"
+                    android:visibility="gone" />
+
+                <!-- Avatar circle -->
+                <FrameLayout
+                    android:id="@+id/flAvatar"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <!-- Foto profil Google -->
+                    <ImageView
+                        android:id="@+id/ivAvatar"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:scaleType="centerCrop"
+                        android:visibility="gone" />
+
+                    <!-- Inisial (fallback kalau foto tidak ada) -->
+                    <TextView
+                        android:id="@+id/tvAvatarInitial"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:gravity="center"
+                        android:textSize="14sp"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="sans-serif-medium"
+                        android:background="@drawable/bg_avatar_circle"
+                        android:text="?" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </androidx.appcompat.widget.Toolbar>
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
             android:background="@color/surface_dark"
-            app:title="@string/app_name" app:titleTextColor="@color/text_primary"/>
-        <com.google.android.material.tabs.TabLayout android:id="@+id/tabLayout"
-            android:layout_width="match_parent" android:layout_height="52dp"
-            android:background="@color/surface_dark"
-            app:tabSelectedTextColor="@color/primary_green" app:tabTextColor="@color/text_secondary"
-            app:tabIndicatorColor="@color/primary_green" app:tabIndicatorHeight="3dp"
-            app:tabGravity="fill" app:tabMode="fixed"
-            app:tabTextAppearance="@style/TabTextStyle"/>
+            app:tabSelectedTextColor="@color/primary_green"
+            app:tabTextColor="@color/text_secondary"
+            app:tabIndicatorColor="@color/primary_green"
+            app:tabIndicatorHeight="3dp"
+            app:tabGravity="fill"
+            app:tabMode="fixed"
+            app:tabTextAppearance="@style/TabTextStyle" />
+
     </com.google.android.material.appbar.AppBarLayout>
-    <androidx.viewpager2.widget.ViewPager2 android:id="@+id/viewPager"
-        android:layout_width="match_parent" android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

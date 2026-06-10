@@ -1,8 +1,9 @@
 package com.kajian.note.ui
 
-import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -21,12 +22,22 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.CircleCrop
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.material.tabs.TabLayoutMediator
+import com.google.firebase.auth.FirebaseAuth
 import com.kajian.note.KajianApp
 import com.kajian.note.R
 import com.kajian.note.databinding.*
 import com.kajian.note.model.Note
 import com.kajian.note.utils.PreferencesManager
+import com.kajian.note.utils.UserManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 // ── MainActivity ─────────────────────────────────────────────────────────────
 
@@ -45,8 +56,144 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false) // pakai tvToolbarTitle custom
         setupTabs()
+        setupUserAvatar()
     }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh tier badge setiap kali balik ke MainActivity (misal setelah bayar)
+        refreshTierBadge()
+    }
+
+    // ── Avatar & tier setup ───────────────────────────────────────────────────
+
+    private fun setupUserAvatar() {
+        val user = FirebaseAuth.getInstance().currentUser
+
+        if (user != null) {
+            // Tampilkan foto Google kalau ada
+            val photoUrl = user.photoUrl
+            if (photoUrl != null) {
+                binding.ivAvatar.visibility = View.VISIBLE
+                binding.tvAvatarInitial.visibility = View.GONE
+                Glide.with(this)
+                    .load(photoUrl)
+                    .transform(CircleCrop())
+                    .placeholder(R.drawable.bg_avatar_circle)
+                    .into(binding.ivAvatar)
+            } else {
+                // Fallback: inisial nama
+                binding.ivAvatar.visibility = View.GONE
+                binding.tvAvatarInitial.visibility = View.VISIBLE
+                val name = user.displayName ?: user.email ?: "?"
+                binding.tvAvatarInitial.text = name.firstOrNull()?.uppercase() ?: "?"
+            }
+
+            // Load tier dari Firestore
+            refreshTierBadge()
+
+        } else {
+            // Guest — tampilkan inisial "G"
+            binding.ivAvatar.visibility = View.GONE
+            binding.tvAvatarInitial.visibility = View.VISIBLE
+            binding.tvAvatarInitial.text = "G"
+            binding.tvTierBadge.visibility = View.GONE
+        }
+
+        // Klik avatar → tampilkan dialog profil
+        binding.flAvatar.setOnClickListener { showProfileDialog() }
+    }
+
+    private fun refreshTierBadge() {
+        val user = FirebaseAuth.getInstance().currentUser ?: return
+        CoroutineScope(Dispatchers.IO).launch {
+            val tier = UserManager.getUserTier() // "FREE", "PREMIUM", "SUBSCRIBER"
+            withContext(Dispatchers.Main) {
+                binding.tvTierBadge.visibility = View.VISIBLE
+                binding.tvTierBadge.text = tier
+                // Warna badge per tier
+                val bgColor = when (tier) {
+                    "PREMIUM"    -> Color.parseColor("#1565C0") // biru
+                    "SUBSCRIBER" -> Color.parseColor("#6A1B9A") // ungu
+                    else         -> Color.parseColor("#37474F") // abu (FREE)
+                }
+                binding.tvTierBadge.background.mutate().setTint(bgColor)
+            }
+        }
+    }
+
+    // ── Dialog profil ─────────────────────────────────────────────────────────
+
+    private fun showProfileDialog() {
+        val user = FirebaseAuth.getInstance().currentUser
+        val isGuest = user == null
+
+        val name  = user?.displayName ?: "Tamu"
+        val email = user?.email ?: "Belum login"
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val tier = if (isGuest) "FREE" else (UserManager.getUserTier() ?: "FREE")
+            withContext(Dispatchers.Main) {
+                val tierLabel = when (tier) {
+                    "PREMIUM"    -> "⭐ Premium"
+                    "SUBSCRIBER" -> "👑 Subscriber"
+                    else         -> "🆓 Free"
+                }
+
+                val message = if (isGuest) {
+                    "Kamu belum login.\nLogin untuk menyimpan data & akses fitur lengkap."
+                } else {
+                    "$email\n\nTier: $tierLabel"
+                }
+
+                val builder = AlertDialog.Builder(this@MainActivity)
+                    .setTitle(if (isGuest) "👤 Tamu" else "👤 $name")
+                    .setMessage(message)
+
+                if (isGuest) {
+                    builder.setPositiveButton("Login") { _, _ ->
+                        startActivity(Intent(this@MainActivity, LoginActivity::class.java))
+                        finish()
+                    }
+                } else {
+                    if (tier == "FREE") {
+                        builder.setPositiveButton("⬆️ Upgrade") { _, _ ->
+                            startActivity(Intent(this@MainActivity, PaywallActivity::class.java))
+                        }
+                    }
+                    builder.setNeutralButton("Pengaturan") { _, _ ->
+                        startActivity(Intent(this@MainActivity, AppSettingsActivity::class.java))
+                    }
+                    builder.setNegativeButton("Sign Out") { _, _ ->
+                        confirmSignOut()
+                    }
+                }
+
+                builder.show()
+            }
+        }
+    }
+
+    private fun confirmSignOut() {
+        AlertDialog.Builder(this)
+            .setTitle("Sign Out")
+            .setMessage("Yakin ingin keluar dari akun?")
+            .setPositiveButton("Sign Out") { _, _ ->
+                FirebaseAuth.getInstance().signOut()
+                // Sign out dari Google juga agar bisa pilih akun lain
+                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()
+                GoogleSignIn.getClient(this, gso).signOut().addOnCompleteListener {
+                    startActivity(Intent(this, LoginActivity::class.java))
+                    finish()
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    // ── Tabs ──────────────────────────────────────────────────────────────────
 
     private fun setupTabs() {
         val adapter = MainPagerAdapter(this)
@@ -58,7 +205,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_main, menu); return true
+        // Menu settings tetap ada sebagai fallback
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -67,7 +216,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(this, AppSettingsActivity::class.java))
                 true
             }
-else -> super.onOptionsItemSelected(item)
+            else -> super.onOptionsItemSelected(item)
         }
     }
 }
