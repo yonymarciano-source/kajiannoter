@@ -189,7 +189,7 @@ class MainActivity : AppCompatActivity() {
                     finish()
                 }
             }
-            .setNegativeButton(android.R.string.cancel, null)
+            .setNegativeButton(android.android.R.string.cancel, null)
             .show()
     }
 
@@ -300,7 +300,7 @@ class NotesListFragment : Fragment() {
             .setTitle(getString(R.string.delete_confirm_title))
             .setMessage(getString(R.string.delete_confirm_msg, note.title))
             .setPositiveButton(getString(R.string.delete)) { _, _ -> vm.deleteNote(note) }
-            .setNegativeButton(android.R.string.cancel, null).show()
+            .setNegativeButton(android.android.R.string.cancel, null).show()
     }
 
     override fun onDestroyView() { super.onDestroyView(); _b = null }
@@ -371,7 +371,7 @@ class AppSettingsActivity : AppCompatActivity() {
                     Toast.makeText(this, "Restart app to apply language", Toast.LENGTH_SHORT).show()
                     recreate()
                 }
-                .setNegativeButton(android.R.string.cancel, null)
+                .setNegativeButton(android.android.R.string.cancel, null)
                 .show()
         }
 
@@ -388,7 +388,7 @@ class AppSettingsActivity : AppCompatActivity() {
                     updateDisplay()
                     Toast.makeText(this, "✅ ${langs[which].second} dipilih", Toast.LENGTH_SHORT).show()
                 }
-                .setNegativeButton(android.R.string.cancel, null)
+                .setNegativeButton(android.android.R.string.cancel, null)
                 .show()
         }
 
@@ -429,7 +429,7 @@ class AppSettingsActivity : AppCompatActivity() {
                     dlg.dismiss()
                     updateDisplay()
                 }
-                .setNegativeButton(android.R.string.cancel, null)
+                .setNegativeButton(android.android.R.string.cancel, null)
                 .show()
         }
 
@@ -446,7 +446,7 @@ class AppSettingsActivity : AppCompatActivity() {
                     updateDisplay()
                     Toast.makeText(this, "Engine: ${options[which]}", Toast.LENGTH_SHORT).show()
                 }
-                .setNegativeButton(android.R.string.cancel, null)
+                .setNegativeButton(android.android.R.string.cancel, null)
                 .show()
         }
 
@@ -472,7 +472,7 @@ class AppSettingsActivity : AppCompatActivity() {
                     val msg = if (key.isNotBlank()) "✅ API Key tersimpan" else "API Key dihapus"
                     Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
                 }
-                .setNegativeButton(android.R.string.cancel, null)
+                .setNegativeButton(android.android.R.string.cancel, null)
                 .show()
         }
 

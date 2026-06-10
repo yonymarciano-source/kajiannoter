@@ -104,7 +104,7 @@ class SpeakerFragment : Fragment() {
                     Toast.makeText(requireContext(), "✅ API Key tersimpan", Toast.LENGTH_SHORT).show()
                 }
             }
-            .setNegativeButton(android.R.string.cancel, null)
+            .setNegativeButton("Batal", null)
             .show()
     }
 
