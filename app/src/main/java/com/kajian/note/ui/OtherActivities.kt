@@ -196,12 +196,30 @@ class MainActivity : AppCompatActivity() {
     // ── Tabs ──────────────────────────────────────────────────────────────────
 
     private fun setupTabs() {
-        val adapter = MainPagerAdapter(this)
-        binding.viewPager.adapter = adapter
-        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, pos ->
-            tab.text = if (pos == 0) getString(R.string.tab_record) else getString(R.string.tab_notes)
-            tab.setIcon(if (pos == 0) R.drawable.ic_mic else R.drawable.ic_notes)
-        }.attach()
+        CoroutineScope(Dispatchers.IO).launch {
+            val tier = UserManager.getTier()
+            val isSubscriber = tier == UserManager.Tier.SUBSCRIBER
+            withContext(Dispatchers.Main) {
+                val adapter = MainPagerAdapter(this@MainActivity, isSubscriber)
+                binding.viewPager.adapter = adapter
+                TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, pos ->
+                    when (pos) {
+                        0 -> { tab.text = getString(R.string.tab_record); tab.setIcon(R.drawable.ic_mic) }
+                        1 -> { tab.text = getString(R.string.tab_notes); tab.setIcon(R.drawable.ic_notes) }
+                        2 -> { tab.text = "Speaker" }
+                    }
+                }.attach()
+                if (isSubscriber) {
+                    binding.tabLayout.setSelectedTabIndicatorColor(
+                        android.graphics.Color.parseColor("#7C3AED")
+                    )
+                    binding.tabLayout.setTabTextColors(
+                        ContextCompat.getColor(this@MainActivity, R.color.text_secondary),
+                        android.graphics.Color.parseColor("#C084FC")
+                    )
+                }
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -221,10 +239,17 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-class MainPagerAdapter(a: FragmentActivity) : FragmentStateAdapter(a) {
-    override fun getItemCount() = 2
-    override fun createFragment(pos: Int): Fragment =
-        if (pos == 0) RecordFragment() else NotesListFragment()
+class MainPagerAdapter(
+    a: FragmentActivity,
+    private val isSubscriber: Boolean = false
+) : FragmentStateAdapter(a) {
+    override fun getItemCount() = if (isSubscriber) 3 else 2
+    override fun createFragment(pos: Int): Fragment = when (pos) {
+        0 -> RecordFragment()
+        1 -> NotesListFragment()
+        2 -> SpeakerFragment()
+        else -> RecordFragment()
+    }
 }
 
 // ── NotesListFragment ─────────────────────────────────────────────────────────
