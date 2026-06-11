@@ -5,19 +5,17 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.*
-import java.net.HttpURLConnection
-import java.net.URL
+import java.util.concurrent.TimeUnit
 
 /**
  * AssemblyAI Transcriber — multi-speaker diarization untuk Subscriber tier.
- *
- * Flow:
- *   1. Upload audio file ke AssemblyAI
- *   2. Submit transcription job dengan speaker_labels=true
- *   3. Poll status sampai selesai
- *   4. Return list SpeakerSegment
+ * Menggunakan OkHttp untuk upload yang lebih reliable di Android.
  */
 object AssemblyAITranscriber {
 
@@ -25,6 +23,12 @@ object AssemblyAITranscriber {
     private const val BASE_URL = "https://api.assemblyai.com/v2"
     private const val PREFS = "kajian_prefs_v3"
     private const val KEY_API = "assemblyai_api_key"
+
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(120, TimeUnit.SECONDS)
+        .readTimeout(120, TimeUnit.SECONDS)
+        .build()
 
     // ── API Key management ───────────────────────────────────────────────
 
@@ -41,7 +45,7 @@ object AssemblyAITranscriber {
     // ── Data model ───────────────────────────────────────────────────────
 
     data class SpeakerSegment(
-        val speaker: String,      // "A", "B", "C", dll
+        val speaker: String,
         val text: String,
         val startMs: Long,
         val endMs: Long
@@ -59,68 +63,59 @@ object AssemblyAITranscriber {
         ctx: Context,
         audioFile: File,
         language: String = "id",
-        maxSpeakers: Int = 0,         // 0 = auto detect
+        maxSpeakers: Int = 0,
         onProgress: (Int, String) -> Unit
     ): DiarizationResult = withContext(Dispatchers.IO) {
 
-        val apiKey = getApiKey(ctx)
-        if (apiKey.isBlank()) {
-            throw IllegalStateException("AssemblyAI API key belum diset")
-        }
+        val apiKey = getApiKey(ctx).trim()
+        if (apiKey.isBlank()) throw IllegalStateException("AssemblyAI API key belum diset")
+
+        Log.d(TAG, "Starting transcription, file size: ${audioFile.length()} bytes")
 
         // Step 1 — Upload audio
         onProgress(10, "Mengunggah audio...")
         val uploadUrl = uploadAudio(apiKey, audioFile)
         Log.d(TAG, "Audio uploaded: $uploadUrl")
 
-        // Step 2 — Submit transcription job
+        // Step 2 — Submit job
         onProgress(25, "Memulai identifikasi speaker...")
         val langCode = when {
-            language.startsWith("id") -> "id"
             language.startsWith("ar") -> "ar"
             language.startsWith("en") -> "en"
             else -> "id"
         }
-
         val transcriptId = submitJob(apiKey, uploadUrl, langCode, maxSpeakers)
         Log.d(TAG, "Job submitted: $transcriptId")
 
-        // Step 3 — Poll status
-        onProgress(40, "Memproses audio...")
+        // Step 3 — Poll
+        onProgress(40, "Mengidentifikasi speaker...")
         val result = pollUntilDone(apiKey, transcriptId) { progress ->
             val mapped = 40 + (progress * 0.5).toInt()
-            onProgress(mapped, "Mengidentifikasi speaker... ($progress%)")
+            onProgress(mapped, "Memproses audio... ($progress%)")
         }
 
-        // Step 4 — Parse result
+        // Step 4 — Parse
         onProgress(95, "Menyusun transkripsi...")
         parseResult(result)
     }
 
-    // ── Upload audio ─────────────────────────────────────────────────────
+    // ── Upload ───────────────────────────────────────────────────────────
 
     private fun uploadAudio(apiKey: String, file: File): String {
-        val url = URL("$BASE_URL/upload")
-        val conn = (url.openConnection() as HttpURLConnection).apply {
-            requestMethod = "POST"
-            setRequestProperty("Authorization", apiKey)
-            setRequestProperty("Content-Type", "application/octet-stream")
-            setRequestProperty("Transfer-Encoding", "chunked")
-            connectTimeout = 30000
-            readTimeout = 60000
-            doOutput = true
-        }
+        val requestBody = file.asRequestBody("application/octet-stream".toMediaType())
+        val request = Request.Builder()
+            .url("$BASE_URL/upload")
+            .addHeader("Authorization", apiKey)
+            .post(requestBody)
+            .build()
 
-        FileInputStream(file).use { fis ->
-            conn.outputStream.use { os ->
-                fis.copyTo(os, bufferSize = 8192)
+        client.newCall(request).execute().use { response ->
+            val body = response.body?.string() ?: ""
+            if (!response.isSuccessful) {
+                throw IOException("Upload failed ${response.code}: $body")
             }
+            return JSONObject(body).getString("upload_url")
         }
-
-        val response = conn.inputStream.bufferedReader().readText()
-        conn.disconnect()
-
-        return JSONObject(response).getString("upload_url")
     }
 
     // ── Submit job ───────────────────────────────────────────────────────
@@ -131,15 +126,7 @@ object AssemblyAITranscriber {
         language: String,
         maxSpeakers: Int
     ): String {
-        val url = URL("$BASE_URL/transcript")
-        val conn = (url.openConnection() as HttpURLConnection).apply {
-            requestMethod = "POST"
-            setRequestProperty("Authorization", apiKey)
-            setRequestProperty("Content-Type", "application/json")
-            doOutput = true
-        }
-
-        val body = JSONObject().apply {
+        val bodyJson = JSONObject().apply {
             put("audio_url", audioUrl)
             put("speaker_labels", true)
             put("language_code", language)
@@ -148,12 +135,22 @@ object AssemblyAITranscriber {
             if (maxSpeakers > 0) put("speakers_expected", maxSpeakers)
         }
 
-        conn.outputStream.bufferedWriter().use { it.write(body.toString()) }
+        val requestBody = bodyJson.toString()
+            .toRequestBody("application/json".toMediaType())
 
-        val response = conn.inputStream.bufferedReader().readText()
-        conn.disconnect()
+        val request = Request.Builder()
+            .url("$BASE_URL/transcript")
+            .addHeader("Authorization", apiKey)
+            .post(requestBody)
+            .build()
 
-        return JSONObject(response).getString("id")
+        client.newCall(request).execute().use { response ->
+            val body = response.body?.string() ?: ""
+            if (!response.isSuccessful) {
+                throw IOException("Submit failed ${response.code}: $body")
+            }
+            return JSONObject(body).getString("id")
+        }
     }
 
     // ── Poll status ──────────────────────────────────────────────────────
@@ -164,40 +161,37 @@ object AssemblyAITranscriber {
         onProgress: (Int) -> Unit
     ): JSONObject {
         var attempts = 0
-        val maxAttempts = 120  // max 10 menit (5 detik per poll)
+        val maxAttempts = 120 // max 6 menit (3 detik per poll)
 
         while (attempts < maxAttempts) {
             delay(3000)
             attempts++
 
-            val url = URL("$BASE_URL/transcript/$transcriptId")
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "GET"
-                setRequestProperty("Authorization", apiKey)
-                connectTimeout = 15000
-                readTimeout = 15000
+            val request = Request.Builder()
+                .url("$BASE_URL/transcript/$transcriptId")
+                .addHeader("Authorization", apiKey)
+                .get()
+                .build()
+
+            val json = client.newCall(request).execute().use { response ->
+                val body = response.body?.string() ?: ""
+                if (!response.isSuccessful) {
+                    throw IOException("Poll failed ${response.code}: $body")
+                }
+                JSONObject(body)
             }
 
-            val response = conn.inputStream.bufferedReader().readText()
-            conn.disconnect()
-
-            val json = JSONObject(response)
             val status = json.getString("status")
-
             Log.d(TAG, "Poll $attempts: status=$status")
 
             when (status) {
                 "completed" -> return json
                 "error" -> throw IOException("AssemblyAI error: ${json.optString("error")}")
-                else -> {
-                    // queued, processing — estimate progress
-                    val progress = minOf(90, attempts * 2)
-                    onProgress(progress)
-                }
+                else -> onProgress(minOf(90, attempts * 2))
             }
         }
 
-        throw IOException("Timeout: transkripsi melebihi 10 menit")
+        throw IOException("Timeout: transkripsi melebihi 6 menit")
     }
 
     // ── Parse result ─────────────────────────────────────────────────────
@@ -207,7 +201,6 @@ object AssemblyAITranscriber {
         val utterances = json.optJSONArray("utterances")
 
         if (utterances == null || utterances.length() == 0) {
-            // Fallback: tidak ada utterances, return sebagai satu speaker
             return DiarizationResult(
                 segments = listOf(SpeakerSegment("A", fullText, 0L, 0L)),
                 fullText = fullText,
@@ -220,13 +213,13 @@ object AssemblyAITranscriber {
 
         for (i in 0 until utterances.length()) {
             val u = utterances.getJSONObject(i)
-            val speaker = u.getString("speaker")  // "A", "B", dll
-            val text = u.getString("text")
-            val start = u.getLong("start")
-            val end = u.getLong("end")
-
-            segments.add(SpeakerSegment(speaker, text, start, end))
-            speakers.add(speaker)
+            segments.add(SpeakerSegment(
+                speaker = u.getString("speaker"),
+                text = u.getString("text"),
+                startMs = u.getLong("start"),
+                endMs = u.getLong("end")
+            ))
+            speakers.add(u.getString("speaker"))
         }
 
         return DiarizationResult(
