@@ -204,9 +204,9 @@ class MainActivity : AppCompatActivity() {
                 binding.viewPager.adapter = adapter
                 TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, pos ->
                     when (pos) {
-                        0 -> { tab.text = getString(R.string.tab_record); tab.setIcon(R.drawable.ic_mic) }
-                        1 -> { tab.text = getString(R.string.tab_notes); tab.setIcon(R.drawable.ic_notes) }
-                        2 -> { tab.text = "Speaker" }
+                        0 -> { tab.text = "Record ⓘ"; tab.setIcon(R.drawable.ic_mic) }
+                        1 -> { tab.text = "Notes ⓘ"; tab.setIcon(R.drawable.ic_notes) }
+                        2 -> { tab.text = "Multi Speaker ⓘ" }
                     }
                 }.attach()
                 if (isSubscriber) {
@@ -218,6 +218,25 @@ class MainActivity : AppCompatActivity() {
                         android.graphics.Color.parseColor("#C084FC")
                     )
                 }
+                // Info button tap on tab labels
+                binding.tabLayout.addOnTabSelectedListener(object : com.google.android.material.tabs.TabLayout.OnTabSelectedListener {
+                    override fun onTabSelected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
+                    override fun onTabUnselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
+                    override fun onTabReselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {
+                        val msg = when (tab?.position) {
+                            0 -> "🎙️ Record\n\nRekam audio kajian dan transkripsi otomatis via Groq Whisper. Mendukung mode Langsung (STT), Streaming (Groq), dan Rekam Dulu."
+                            1 -> "📋 Notes\n\nDaftar semua catatan kajian yang tersimpan. Bisa dicari, difilter per folder, dan dibuka untuk melihat transkripsi lengkap."
+                            2 -> "👥 Multi Speaker\n\nKhusus untuk kajian dengan 2+ pembicara (Ustadz & Jamaah). Menggunakan AssemblyAI untuk identifikasi otomatis siapa yang berbicara.\n\n⭐ Fitur Subscriber"
+                            else -> ""
+                        }
+                        if (msg.isNotBlank()) {
+                            androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
+                                .setMessage(msg)
+                                .setPositiveButton("OK", null)
+                                .show()
+                        }
+                    }
+                })
             }
         }
     }
@@ -278,11 +297,22 @@ class NotesListFragment : Fragment() {
 
         vm.allNotes.observe(viewLifecycleOwner) { applyFilter(it) }
 
-        // Folder chips — hanya untuk Premium ke atas
+        // Folder manage button + chips — hanya untuk Premium+ (logged in)
         val tier = UserManager.getCachedTier()
-        if (tier != UserManager.Tier.FREE) {
+        val canUseFolder = UserManager.isLoggedIn && tier != UserManager.Tier.FREE
+        if (canUseFolder) {
             b.scrollFolderChips.visibility = View.VISIBLE
+            b.btnManageFolders.visibility = View.VISIBLE
             vm.allFolders.observe(viewLifecycleOwner) { folders -> buildFolderChips(folders) }
+        }
+        b.btnManageFolders.setOnClickListener {
+            if (canUseFolder) {
+                startActivity(android.content.Intent(requireContext(), FolderManagerActivity::class.java))
+            } else {
+                startActivity(android.content.Intent(requireContext(), PaywallActivity::class.java).apply {
+                    putExtra(PaywallActivity.EXTRA_REASON, PaywallActivity.REASON_EXPORT)
+                })
+            }
         }
 
         b.etSearch.addTextChangedListener(object : TextWatcher {

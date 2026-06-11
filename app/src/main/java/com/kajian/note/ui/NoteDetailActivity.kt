@@ -61,7 +61,10 @@ class NoteDetailActivity : AppCompatActivity() {
     private var bookmarkIndex = -1                 // index bookmark terakhir di-jump
 
     // Current tab
-    private var currentTab = 0  // 0=transcript, 1=summary, 2=mindmap
+    private var currentTab = 0  // 0=transcript, 1=translate, 2=summary, 3=poin kunci
+    private var translateLang = "id"
+    private var translatedText = ""
+    private var poinKunciText = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -116,8 +119,9 @@ class NoteDetailActivity : AppCompatActivity() {
 
     private fun setupTabs() {
         b.tabLayout.addTab(b.tabLayout.newTab().setText("📝 Transcript"))
+        b.tabLayout.addTab(b.tabLayout.newTab().setText("🌐 Translate"))
         b.tabLayout.addTab(b.tabLayout.newTab().setText("✦ Summary"))
-        b.tabLayout.addTab(b.tabLayout.newTab().setText("🗺 Mindmap"))
+        b.tabLayout.addTab(b.tabLayout.newTab().setText("🔑 Poin Kunci"))
 
         b.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
@@ -132,12 +136,14 @@ class NoteDetailActivity : AppCompatActivity() {
     private fun showTab(index: Int) {
         val n = note ?: return
         b.panelTranscript.isVisible = index == 0
-        b.panelSummary.isVisible    = index == 1
-        b.panelMindmap.isVisible    = index == 2
+        b.panelTranslate.isVisible  = index == 1
+        b.panelSummary.isVisible    = index == 2
+        b.panelMindmap.isVisible    = index == 3
 
         when (index) {
-            1 -> loadSummaryPanel(n)
-            2 -> loadMindmapPanel(n)
+            1 -> loadTranslatePanel(n)
+            2 -> loadSummaryPanel(n)
+            3 -> loadPoinKunciPanel(n)
         }
     }
 
@@ -193,7 +199,7 @@ class NoteDetailActivity : AppCompatActivity() {
         b.btnEditTitle.setOnClickListener { showEditTitleDialog(n) }
 
         // Folder button — hanya visible untuk Premium ke atas
-        if (userTier != UserManager.Tier.FREE) {
+        if ((!UserManager.isLoggedIn || userTier != UserManager.Tier.FREE)) {
             b.btnMoveFolder.isVisible = true
             val folderLabel = vm.allFolders.value?.find { it.id == n.folderId }?.name
             b.btnMoveFolder.text = if (folderLabel != null) "📁 $folderLabel" else "📁 Pindah Folder"
@@ -260,7 +266,7 @@ class NoteDetailActivity : AppCompatActivity() {
         summaryEdited = false
 
         // Free user: tampilkan pesan locked
-        if (userTier == UserManager.Tier.FREE) {
+        if ((UserManager.isLoggedIn && userTier == UserManager.Tier.FREE)) {
             b.tvSummaryEmpty.isVisible     = true
             b.cardSummaryContent.isVisible = false
             b.btnGenerateSummary.isVisible = false
@@ -307,7 +313,7 @@ class NoteDetailActivity : AppCompatActivity() {
 
     private fun generateSummary(n: Note) {
         // ── Tier gate ─────────────────────────────────────────────────────────
-        if (userTier == UserManager.Tier.FREE) {
+        if ((UserManager.isLoggedIn && userTier == UserManager.Tier.FREE)) {
             startActivity(Intent(this, PaywallActivity::class.java).apply {
                 putExtra(PaywallActivity.EXTRA_REASON, PaywallActivity.REASON_EXPORT)
             })
@@ -390,50 +396,209 @@ class NoteDetailActivity : AppCompatActivity() {
 
     // ── Mindmap Panel (#7 mindmap via Groq) ───────────────────────────────
 
-    private fun loadMindmapPanel(n: Note, retryCount: Int = 0) {
-        if (b.mindmapView.tag == n.id) return
+    // ── Translate Panel ───────────────────────────────────────────────────────
 
-        b.tvMindmapLoading.isVisible = true
-        b.tvMindmapLoading.text = if (retryCount > 0)
-            "⏳ Mencoba ulang... ($retryCount/3)"
-        else "⏳ Generating mindmap via Groq AI..."
-        b.mindmapView.isVisible = false
-        b.btnGenerateMindmap.isVisible = false
+    private fun loadTranslatePanel(n: Note) {
+        // Tier gate — Premium+
+        if (UserManager.isLoggedIn && userTier == UserManager.Tier.FREE) {
+            b.tvTranslateEmpty.isVisible = true
+            b.cardTranslateContent.isVisible = false
+            b.btnTranslate.isVisible = false
+            b.tvTranslateEmpty.text = "🔒 Fitur Translate tersedia untuk Premium & Subscriber.\n\nUpgrade untuk terjemahan otomatis via AI."
+            b.btnTranslate.setOnClickListener {
+                startActivity(Intent(this, PaywallActivity::class.java).apply {
+                    putExtra(PaywallActivity.EXTRA_REASON, PaywallActivity.REASON_EXPORT)
+                })
+            }
+            b.btnTranslate.isVisible = true
+            b.btnTranslate.text = "⭐ Upgrade ke Premium"
+            return
+        }
+        if (!UserManager.isLoggedIn) {
+            b.tvTranslateEmpty.isVisible = true
+            b.tvTranslateEmpty.text = "🔒 Login untuk menggunakan fitur Translate."
+            b.btnTranslate.isVisible = true
+            b.btnTranslate.text = "🔑 Login"
+            b.btnTranslate.setOnClickListener {
+                startActivity(Intent(this, LoginActivity::class.java))
+            }
+            b.cardTranslateContent.isVisible = false
+            return
+        }
+
+        // Setup chips
+        setupTranslateChips(n)
+
+        // Show cached translation if available
+        if (translatedText.isNotBlank()) {
+            showTranslateContent(translatedText)
+        } else {
+            b.tvTranslateEmpty.isVisible = true
+            b.tvTranslateEmpty.text = "Pilih bahasa tujuan, lalu tap Terjemahkan."
+            b.cardTranslateContent.isVisible = false
+            b.btnTranslate.isVisible = true
+            b.btnTranslate.text = "🌐 Terjemahkan"
+        }
+
+        b.btnTranslate.setOnClickListener { doTranslate(n) }
+    }
+
+    private fun setupTranslateChips(n: Note) {
+        fun select(lang: String) {
+            translateLang = lang
+            b.chipTranslateId.setBackgroundResource(
+                if (lang == "id") R.drawable.bg_chip_active else R.drawable.bg_chip_inactive)
+            b.chipTranslateEn.setBackgroundResource(
+                if (lang == "en") R.drawable.bg_chip_active else R.drawable.bg_chip_inactive)
+            // Clear cache when language changes
+            translatedText = ""
+            b.cardTranslateContent.isVisible = false
+            b.tvTranslateEmpty.isVisible = true
+            b.tvTranslateEmpty.text = "Pilih bahasa tujuan, lalu tap Terjemahkan."
+            b.btnTranslate.isVisible = true
+            b.btnTranslate.text = "🌐 Terjemahkan"
+        }
+        b.chipTranslateId.setOnClickListener { select("id") }
+        b.chipTranslateEn.setOnClickListener { select("en") }
+        // Set initial state
+        b.chipTranslateId.setBackgroundResource(
+            if (translateLang == "id") R.drawable.bg_chip_active else R.drawable.bg_chip_inactive)
+        b.chipTranslateEn.setBackgroundResource(
+            if (translateLang == "en") R.drawable.bg_chip_active else R.drawable.bg_chip_inactive)
+    }
+
+    private fun doTranslate(n: Note) {
+        b.btnTranslate.isEnabled = false
+        b.tvTranslateEmpty.isVisible = true
+        b.tvTranslateEmpty.text = "⏳ Menerjemahkan via Groq AI..."
+        b.cardTranslateContent.isVisible = false
 
         lifecycleScope.launch {
-            val result = MindmapGenerator.generate(
-                ctx          = this@NoteDetailActivity,
-                title        = n.title,
-                plainText    = n.plainText,
-                detectedLang = n.detectedLanguage
+            val result = GroqSummarizer.translate(
+                ctx = this@NoteDetailActivity,
+                plainText = n.plainText,
+                targetLang = translateLang
             )
-            b.tvMindmapLoading.isVisible = false
-            result.onSuccess { mindmap ->
-                if (mindmap.nodes.isEmpty() && retryCount < 3) {
-                    // Retry jika nodes kosong
-                    delay(1000)
-                    loadMindmapPanel(n, retryCount + 1)
-                    return@launch
-                }
-                b.mindmapView.setMindmap(mindmap)
-                b.mindmapView.isVisible = true
-                b.mindmapView.tag = n.id
-            }.onFailure {
-                if (retryCount < 2) {
-                    // Auto retry 2x sebelum tampil error
-                    delay(1500)
-                    loadMindmapPanel(n, retryCount + 1)
-                } else {
-                    b.tvMindmapLoading.text = "❌ Gagal generate mindmap setelah 3x percobaan.\nPastikan Groq key diset di Settings."
-                    b.tvMindmapLoading.isVisible = true
-                    b.btnGenerateMindmap.isVisible = true
-                    b.btnGenerateMindmap.text = "↻ Coba Lagi"
-                    b.btnGenerateMindmap.setOnClickListener {
-                        b.mindmapView.tag = null
-                        loadMindmapPanel(n, 0)
-                    }
+            b.btnTranslate.isEnabled = true
+            result.onSuccess { text ->
+                translatedText = text
+                showTranslateContent(text)
+            }.onFailure { e ->
+                b.tvTranslateEmpty.text = "❌ Gagal: ${e.message}\n\nPastikan Groq API Key sudah diset."
+                b.btnTranslate.isVisible = true
+            }
+        }
+    }
+
+    private fun showTranslateContent(text: String) {
+        b.tvTranslateEmpty.isVisible = false
+        b.cardTranslateContent.isVisible = true
+        b.tvTranslateContent.text = text
+        b.btnTranslate.isVisible = true
+        b.btnTranslate.text = "↻ Terjemahkan Ulang"
+    }
+
+    // ── Poin Kunci Panel (replaces Mindmap) ───────────────────────────────────
+
+    private fun loadPoinKunciPanel(n: Note) {
+        // Tier gate — Premium+
+        if (UserManager.isLoggedIn && userTier == UserManager.Tier.FREE) {
+            b.tvPoinKunciLoading.isVisible = true
+            b.tvPoinKunciLoading.text = "🔒 Fitur Poin Kunci tersedia untuk Premium & Subscriber.\n\nUpgrade untuk highlight poin penting kajian."
+            b.llPoinKunciCards.isVisible = false
+            b.btnGeneratePoinKunci.isVisible = true
+            b.btnGeneratePoinKunci.text = "⭐ Upgrade ke Premium"
+            b.btnGeneratePoinKunci.setOnClickListener {
+                startActivity(Intent(this, PaywallActivity::class.java).apply {
+                    putExtra(PaywallActivity.EXTRA_REASON, PaywallActivity.REASON_EXPORT)
+                })
+            }
+            return
+        }
+        if (!UserManager.isLoggedIn) {
+            b.tvPoinKunciLoading.isVisible = true
+            b.tvPoinKunciLoading.text = "🔒 Login untuk menggunakan fitur Poin Kunci."
+            b.btnGeneratePoinKunci.isVisible = true
+            b.btnGeneratePoinKunci.text = "🔑 Login"
+            b.btnGeneratePoinKunci.setOnClickListener { startActivity(Intent(this, LoginActivity::class.java)) }
+            return
+        }
+
+        // Show cached result
+        if (poinKunciText.isNotBlank()) {
+            renderPoinKunciCards(poinKunciText)
+            return
+        }
+
+        // Auto-generate on first open
+        b.tvPoinKunciLoading.isVisible = true
+        b.tvPoinKunciLoading.text = "⏳ Membuat Poin Kunci via Groq AI..."
+        b.llPoinKunciCards.isVisible = false
+        b.btnGeneratePoinKunci.isVisible = false
+
+        lifecycleScope.launch {
+            val isDetailed = userTier == UserManager.Tier.SUBSCRIBER
+            val result = GroqSummarizer.generatePoinKunci(
+                ctx = this@NoteDetailActivity,
+                title = n.title,
+                plainText = n.plainText,
+                detectedLang = n.detectedLanguage,
+                detailed = isDetailed
+            )
+            b.tvPoinKunciLoading.isVisible = false
+            result.onSuccess { text ->
+                poinKunciText = text
+                renderPoinKunciCards(text)
+            }.onFailure { e ->
+                b.tvPoinKunciLoading.isVisible = true
+                b.tvPoinKunciLoading.text = "❌ Gagal: ${e.message}\n\nPastikan Groq API Key sudah diset."
+                b.btnGeneratePoinKunci.isVisible = true
+                b.btnGeneratePoinKunci.text = "↻ Coba Lagi"
+                b.btnGeneratePoinKunci.setOnClickListener {
+                    poinKunciText = ""
+                    loadPoinKunciPanel(n)
                 }
             }
+        }
+    }
+
+    private fun renderPoinKunciCards(text: String) {
+        b.llPoinKunciCards.removeAllViews()
+        b.llPoinKunciCards.isVisible = true
+
+        val points = text.split("---").map { it.trim() }.filter { it.isNotBlank() }
+        points.forEach { point ->
+            val card = android.view.LayoutInflater.from(this)
+                .inflate(android.R.layout.simple_list_item_1, b.llPoinKunciCards, false)
+            val tv = card.findViewById<android.widget.TextView>(android.R.id.text1)
+            tv.text = point
+            tv.setTextColor(android.graphics.Color.parseColor("#E0E0E0"))
+            tv.textSize = 14f
+            tv.setPadding(48, 32, 48, 32)
+            tv.setLineSpacing(8f, 1f)
+            tv.setBackgroundColor(android.graphics.Color.parseColor("#1E2A3A"))
+
+            // Wrap in card
+            val cardView = androidx.cardview.widget.CardView(this).apply {
+                radius = 16f
+                cardElevation = 0f
+                setCardBackgroundColor(android.graphics.Color.parseColor("#1A2332"))
+                val lp = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                lp.setMargins(0, 0, 0, 16)
+                layoutParams = lp
+            }
+            cardView.addView(tv)
+            b.llPoinKunciCards.addView(cardView)
+        }
+
+        b.btnGeneratePoinKunci.isVisible = true
+        b.btnGeneratePoinKunci.text = "↻ Generate Ulang"
+        b.btnGeneratePoinKunci.setOnClickListener {
+            poinKunciText = ""
+            note?.let { loadPoinKunciPanel(it) }
         }
     }
 
@@ -915,7 +1080,7 @@ class NoteDetailActivity : AppCompatActivity() {
 
     private fun showExportDialog(n: Note) {
         // ── Tier gate ─────────────────────────────────────────────────────────
-        if (userTier == UserManager.Tier.FREE) {
+        if ((UserManager.isLoggedIn && userTier == UserManager.Tier.FREE)) {
             startActivity(Intent(this, PaywallActivity::class.java).apply {
                 putExtra(PaywallActivity.EXTRA_REASON, PaywallActivity.REASON_EXPORT)
             })

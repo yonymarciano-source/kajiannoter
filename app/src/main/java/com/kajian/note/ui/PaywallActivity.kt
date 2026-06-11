@@ -46,17 +46,17 @@ class PaywallActivity : AppCompatActivity() {
 
         // Sesuaikan headline berdasarkan reason
         binding.tvPaywallTitle.text = when (reason) {
-            REASON_NOTE_LIMIT -> "Batas 10 Catatan Tercapai"
-            REASON_EXPORT -> "Fitur Export Premium"
-            REASON_DIARIZATION -> "Fitur Speaker Diarization"
-            REASON_TRANSLATION -> "Fitur Terjemah Arab"
+            REASON_NOTE_LIMIT -> "Batas 10 Catatan Tercapai 📋"
+            REASON_EXPORT -> "Fitur Premium 🔒"
+            REASON_DIARIZATION -> "Fitur Multi Speaker 👥"
+            REASON_TRANSLATION -> "Fitur Translate 🌐"
             else -> "Upgrade KajianNote"
         }
 
         binding.tvPaywallSubtitle.text = when (reason) {
-            REASON_NOTE_LIMIT -> "Versi gratis hanya bisa menyimpan 10 catatan. Upgrade untuk catatan tak terbatas."
-            REASON_DIARIZATION -> "Kenali siapa yang berbicara — label Ustadz & Jamaah otomatis."
-            REASON_TRANSLATION -> "Terjemahan otomatis teks Arab dalam transkripsi."
+            REASON_NOTE_LIMIT -> "Akun FREE bisa menyimpan 10 catatan. Upgrade Premium untuk catatan tak terbatas + Summary, Translate, Export, dan Folder."
+            REASON_DIARIZATION -> "Kenali siapa yang berbicara — identifikasi otomatis Ustadz & Jamaah dalam kajian. Fitur eksklusif Subscriber."
+            REASON_TRANSLATION -> "Terjemahkan transkripsi kajian ke Bahasa Indonesia atau English otomatis via AI."
             else -> "Buka semua fitur KajianNote untuk pengalaman menuntut ilmu terbaik."
         }
 

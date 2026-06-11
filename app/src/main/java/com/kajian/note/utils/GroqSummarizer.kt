@@ -250,6 +250,163 @@ object GroqSummarizer {
      * Resolve bahasa yang sebenarnya dari kode language note.
      * Kalau auto/tidak dikenal, deteksi dari karakter teks transkripsi.
      */
+    /**
+     * Terjemahkan transkripsi ke bahasa target (Premium+).
+     * @param targetLang "id" = Indonesia, "en" = English
+     */
+    suspend fun translate(
+        ctx: Context,
+        plainText: String,
+        targetLang: String = "id"
+    ): Result<String> = withContext(Dispatchers.IO) {
+        val apiKey = GroqTranscriber.getApiKey(ctx)
+        if (apiKey.isBlank()) return@withContext Result.failure(Exception("NO_KEY"))
+
+        try {
+            val truncated = if (plainText.length > 6000) plainText.take(6000) + "\n...[terpotong]" else plainText
+            val (systemPrompt, userPrompt) = when (targetLang) {
+                "en" -> Pair(
+                    "You are a professional translator. Translate the following Islamic study transcript to English. Preserve Arabic terms (Quran, hadith, Islamic terminology). Output only the translation, no commentary.",
+                    "Translate to English:\n\n$truncated"
+                )
+                else -> Pair(
+                    "Kamu adalah penerjemah profesional. Terjemahkan transkripsi kajian Islam berikut ke Bahasa Indonesia yang baik dan benar. Pertahankan istilah Arab (Al-Qur\'an, hadits, istilah Islam). Output hanya terjemahan, tanpa komentar.",
+                    "Terjemahkan ke Bahasa Indonesia:\n\n$truncated"
+                )
+            }
+
+            val requestBody = JSONObject().apply {
+                put("model", MODEL)
+                put("max_tokens", 2048)
+                put("temperature", 0.2)
+                put("messages", JSONArray().apply {
+                    put(JSONObject().apply { put("role", "system"); put("content", systemPrompt) })
+                    put(JSONObject().apply { put("role", "user"); put("content", userPrompt) })
+                })
+            }
+
+            val conn = URL(GROQ_URL).openConnection() as HttpURLConnection
+            conn.apply {
+                requestMethod = "POST"
+                setRequestProperty("Authorization", "Bearer $apiKey")
+                setRequestProperty("Content-Type", "application/json")
+                doOutput = true; connectTimeout = 30_000; readTimeout = 90_000
+            }
+            OutputStreamWriter(conn.outputStream, "UTF-8").use { it.write(requestBody.toString()) }
+
+            val code = conn.responseCode
+            if (code != 200) return@withContext Result.failure(Exception("HTTP $code"))
+
+            val content = JSONObject(conn.inputStream.bufferedReader().readText())
+                .getJSONArray("choices").getJSONObject(0)
+                .getJSONObject("message").getString("content").trim()
+
+            Result.success(content)
+        } catch (e: Exception) {
+            Log.e(TAG, "translate error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Generate Poin Kunci (pengganti Mindmap) — kartu highlight + dalil (Premium+).
+     * Subscriber: lebih detail dengan dalil lengkap.
+     */
+    suspend fun generatePoinKunci(
+        ctx: Context,
+        title: String,
+        plainText: String,
+        detectedLang: String = "id",
+        detailed: Boolean = false
+    ): Result<String> = withContext(Dispatchers.IO) {
+        val apiKey = GroqTranscriber.getApiKey(ctx)
+        if (apiKey.isBlank()) return@withContext Result.failure(Exception("NO_KEY"))
+
+        try {
+            val truncated = if (plainText.length > 6000) plainText.take(6000) + "\n...[terpotong]" else plainText
+            val lang = resolveLang(detectedLang, plainText)
+
+            val systemPrompt = if (detailed) {
+                when {
+                    lang.startsWith("id") -> """
+                        Kamu adalah asisten kajian Islam. Buat POIN KUNCI LENGKAP dari kajian ini.
+                        Format setiap poin sebagai berikut (gunakan pemisah "---" antar poin):
+                        🔑 [Judul Poin]
+                        [Penjelasan 2-3 kalimat]
+                        📖 Dalil: [Kutipan ayat/hadits jika ada, atau "Tidak disebutkan secara eksplisit"]
+                        💡 Amal: [Langkah praktis 1 kalimat]
+                        ---
+                        Buat 5-7 poin. Langsung mulai tanpa intro.
+                    """.trimIndent()
+                    else -> """
+                        You are an Islamic study assistant. Create DETAILED KEY POINTS from this study session.
+                        Format each point (use "---" separator):
+                        🔑 [Point Title]
+                        [2-3 sentence explanation]
+                        📖 Dalil: [Quran/Hadith reference if mentioned, or "Not explicitly mentioned"]
+                        💡 Action: [1 sentence practical step]
+                        ---
+                        Create 5-7 points. Start directly without intro.
+                    """.trimIndent()
+                }
+            } else {
+                when {
+                    lang.startsWith("id") -> """
+                        Kamu adalah asisten kajian Islam. Buat POIN KUNCI dari kajian ini.
+                        Format setiap poin (gunakan pemisah "---" antar poin):
+                        🔑 [Judul Poin]
+                        [Penjelasan 1-2 kalimat]
+                        ---
+                        Buat 5-8 poin ringkas. Langsung mulai tanpa intro.
+                    """.trimIndent()
+                    else -> """
+                        You are an Islamic study assistant. Create KEY POINTS from this study session.
+                        Format each point (use "---" separator):
+                        🔑 [Point Title]
+                        [1-2 sentence explanation]
+                        ---
+                        Create 5-8 concise points. Start directly without intro.
+                    """.trimIndent()
+                }
+            }
+
+            val requestBody = JSONObject().apply {
+                put("model", MODEL)
+                put("max_tokens", if (detailed) 2048 else 1024)
+                put("temperature", 0.3)
+                put("messages", JSONArray().apply {
+                    put(JSONObject().apply { put("role", "system"); put("content", systemPrompt) })
+                    put(JSONObject().apply {
+                        put("role", "user")
+                        put("content", "Judul: $title\n\nTranskripsi:\n$truncated")
+                    })
+                })
+            }
+
+            val conn = URL(GROQ_URL).openConnection() as HttpURLConnection
+            conn.apply {
+                requestMethod = "POST"
+                setRequestProperty("Authorization", "Bearer $apiKey")
+                setRequestProperty("Content-Type", "application/json")
+                doOutput = true; connectTimeout = 30_000; readTimeout = 90_000
+            }
+            OutputStreamWriter(conn.outputStream, "UTF-8").use { it.write(requestBody.toString()) }
+
+            val code = conn.responseCode
+            if (code != 200) return@withContext Result.failure(Exception("HTTP $code"))
+
+            val content = JSONObject(conn.inputStream.bufferedReader().readText())
+                .getJSONArray("choices").getJSONObject(0)
+                .getJSONObject("message").getString("content").trim()
+
+            Result.success(content)
+        } catch (e: Exception) {
+            Log.e(TAG, "generatePoinKunci error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+
     private fun resolveLang(detectedLang: String, text: String): String {
         return when {
             detectedLang.startsWith("id") -> "id"

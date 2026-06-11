@@ -67,9 +67,12 @@ object UserManager {
 
     /**
      * Cek apakah user bisa tambah catatan baru.
-     * Free user: max 10 catatan.
+     * - Guest (tidak login): max 3 catatan (teaser)
+     * - FREE (login): max 10 catatan
+     * - PREMIUM / SUBSCRIBER: tidak ada batas
      */
     suspend fun canAddNote(currentCount: Int): Boolean {
+        if (!isLoggedIn) return currentCount < 3  // Guest max 3 teaser
         val tier = getTier()
         return when (tier) {
             Tier.FREE -> currentCount < 10
@@ -77,9 +80,9 @@ object UserManager {
         }
     }
 
-    fun canExportAdvanced(): Boolean = cachedTier != Tier.FREE
-    fun canUseDiarization(): Boolean = cachedTier == Tier.SUBSCRIBER
-    fun canUseArabicTranslation(): Boolean = cachedTier == Tier.SUBSCRIBER
+    fun canExportAdvanced(): Boolean = isLoggedIn && cachedTier != Tier.FREE
+    fun canUseDiarization(): Boolean = isLoggedIn && cachedTier == Tier.SUBSCRIBER
+    fun canUseArabicTranslation(): Boolean = isLoggedIn && cachedTier == Tier.SUBSCRIBER
 
     /**
      * Update tier setelah user bayar. Dipanggil dari payment callback.

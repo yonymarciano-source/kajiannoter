@@ -392,9 +392,22 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
         viewLifecycleOwner.lifecycleScope.launch {
             val canAdd = vm.canAddNote()
             if (!canAdd) {
-                startActivity(android.content.Intent(requireContext(), PaywallActivity::class.java).apply {
-                    putExtra(PaywallActivity.EXTRA_REASON, PaywallActivity.REASON_NOTE_LIMIT)
-                })
+                if (!com.kajian.note.utils.UserManager.isLoggedIn) {
+                    // Guest: arahkan ke login
+                    androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                        .setTitle("Batas 3 Catatan (Guest)")
+                        .setMessage("Kamu sudah menyimpan 3 catatan sebagai tamu.\n\nLogin gratis untuk menyimpan hingga 10 catatan!")
+                        .setPositiveButton("Login") { _, _ ->
+                            startActivity(android.content.Intent(requireContext(), LoginActivity::class.java))
+                        }
+                        .setNegativeButton("Nanti", null)
+                        .show()
+                } else {
+                    // FREE user: arahkan ke paywall
+                    startActivity(android.content.Intent(requireContext(), PaywallActivity::class.java).apply {
+                        putExtra(PaywallActivity.EXTRA_REASON, PaywallActivity.REASON_NOTE_LIMIT)
+                    })
+                }
                 return@launch
             }
             showSaveDialogInternal(content)

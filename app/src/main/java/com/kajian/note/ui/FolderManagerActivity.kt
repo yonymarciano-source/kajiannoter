@@ -37,7 +37,7 @@ class FolderManagerActivity : AppCompatActivity() {
         supportActionBar?.title = "Kelola Folder"
 
         // ── Tier gate ─────────────────────────────────────────────────────────
-        if (UserManager.getCachedTier() == UserManager.Tier.FREE) {
+        if (UserManager.isLoggedIn && UserManager.getCachedTier() == UserManager.Tier.FREE) {
             startActivity(Intent(this, PaywallActivity::class.java).apply {
                 putExtra(PaywallActivity.EXTRA_REASON, PaywallActivity.REASON_EXPORT)
             })
