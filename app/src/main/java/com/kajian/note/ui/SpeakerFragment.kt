@@ -255,13 +255,12 @@ class SpeakerFragment : Fragment() {
     }
 
     private fun stopRecording() {
-        audioRec?.stop { }
         isRecording = false
         stopTimer()
 
         b.btnRecord.setImageResource(R.drawable.ic_mic)
         b.btnRecord.clearColorFilter()
-        b.tvRecordStatus.text = "Memproses..."
+        b.tvRecordStatus.text = "Menyiapkan file..."
         b.tvRecordStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
 
         b.chipSpeakerAuto.isEnabled = true
@@ -269,8 +268,15 @@ class SpeakerFragment : Fragment() {
         b.chipSpeaker3.isEnabled = true
         b.chipSpeaker4.isEnabled = true
 
-        if (savedAudioPath.isNotBlank()) {
-            processAudio(File(savedAudioPath))
+        // Tunggu file selesai ditulis dulu, baru upload
+        audioRec?.stop { file ->
+            if (file != null && file.exists() && file.length() > 44) {
+                b.tvRecordStatus.text = "Memproses..."
+                processAudio(file)
+            } else {
+                b.tvRecordStatus.text = "Gagal — file audio kosong"
+                b.progressBar.visibility = android.view.View.GONE
+            }
         }
     }
 
