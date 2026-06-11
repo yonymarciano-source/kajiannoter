@@ -100,12 +100,14 @@ object AssemblyAITranscriber {
     // ── Upload audio ─────────────────────────────────────────────────────
 
     private fun uploadAudio(apiKey: String, file: File): String {
-        val url = URL("$BASE_URL/upload")
+        val url = URL("$BASE_URL/v2/upload")
         val conn = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             setRequestProperty("Authorization", apiKey)
             setRequestProperty("Content-Type", "application/octet-stream")
             setRequestProperty("Transfer-Encoding", "chunked")
+            connectTimeout = 30000
+            readTimeout = 60000
             doOutput = true
         }
 
@@ -129,7 +131,7 @@ object AssemblyAITranscriber {
         language: String,
         maxSpeakers: Int
     ): String {
-        val url = URL("$BASE_URL/transcript")
+        val url = URL("$BASE_URL/v2/transcript")
         val conn = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             setRequestProperty("Authorization", apiKey)
@@ -165,13 +167,15 @@ object AssemblyAITranscriber {
         val maxAttempts = 120  // max 10 menit (5 detik per poll)
 
         while (attempts < maxAttempts) {
-            delay(5000)
+            delay(3000)
             attempts++
 
-            val url = URL("$BASE_URL/transcript/$transcriptId")
+            val url = URL("$BASE_URL/v2/transcript/$transcriptId")
             val conn = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "GET"
                 setRequestProperty("Authorization", apiKey)
+                connectTimeout = 15000
+                readTimeout = 15000
             }
 
             val response = conn.inputStream.bufferedReader().readText()
