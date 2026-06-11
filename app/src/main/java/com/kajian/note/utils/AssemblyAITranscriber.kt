@@ -100,7 +100,7 @@ object AssemblyAITranscriber {
     // ── Upload audio ─────────────────────────────────────────────────────
 
     private fun uploadAudio(apiKey: String, file: File): String {
-        val url = URL("$BASE_URL/v2/upload")
+        val url = URL("$BASE_URL/upload")
         val conn = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             setRequestProperty("Authorization", apiKey)
@@ -131,7 +131,7 @@ object AssemblyAITranscriber {
         language: String,
         maxSpeakers: Int
     ): String {
-        val url = URL("$BASE_URL/v2/transcript")
+        val url = URL("$BASE_URL/transcript")
         val conn = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             setRequestProperty("Authorization", apiKey)
@@ -170,7 +170,7 @@ object AssemblyAITranscriber {
             delay(3000)
             attempts++
 
-            val url = URL("$BASE_URL/v2/transcript/$transcriptId")
+            val url = URL("$BASE_URL/transcript/$transcriptId")
             val conn = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "GET"
                 setRequestProperty("Authorization", apiKey)
