@@ -45,10 +45,14 @@ object UserManager {
         return try {
             val doc = db.collection("users").document(getUserId()).get().await()
             val tierStr = doc.getString("tier") ?: "FREE"
-            val expiry = doc.getLong("subscriptionExpiry") ?: 0L
+            // Support both number and string type for subscriptionExpiry
+            val expiry = doc.getLong("subscriptionExpiry")
+                ?: doc.getString("subscriptionExpiry")?.toLongOrNull()
+                ?: 0L
 
             cachedTier = when {
                 tierStr == "SUBSCRIBER" && expiry > now -> Tier.SUBSCRIBER
+                tierStr == "SUBSCRIBER" && expiry == 0L -> Tier.SUBSCRIBER // no expiry = lifetime
                 tierStr == "PREMIUM" -> Tier.PREMIUM
                 else -> Tier.FREE
             }
