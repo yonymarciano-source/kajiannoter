@@ -19,7 +19,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.launch
 import com.google.gson.Gson
 import com.kajian.note.R
 import com.kajian.note.databinding.FragmentRecordBinding
@@ -386,6 +388,20 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
     }
 
     private fun showSaveDialog(content: String) {
+        // ── Tier gate: cek batas 10 catatan untuk Free ────────────────────────
+        viewLifecycleOwner.lifecycleScope.launch {
+            val canAdd = vm.canAddNote()
+            if (!canAdd) {
+                startActivity(android.content.Intent(requireContext(), PaywallActivity::class.java).apply {
+                    putExtra(PaywallActivity.EXTRA_REASON, PaywallActivity.REASON_NOTE_LIMIT)
+                })
+                return@launch
+            }
+            showSaveDialogInternal(content)
+        }
+    }
+
+    private fun showSaveDialogInternal(content: String) {
         val autoTitle = content.trim().split("\\s+".toRegex()).take(7).joinToString(" ")
             .let { if (content.split(" ").size > 7) "$it…" else it }
         val input = EditText(requireContext()).apply {

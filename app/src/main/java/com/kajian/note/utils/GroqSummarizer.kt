@@ -165,6 +165,85 @@ object GroqSummarizer {
         }
     }
 
+    /**
+     * Catatan Rapi LENGKAP (Subscriber) — highlight ayat/hadits, struktur detail.
+     * @param ctx           Context untuk ambil API key
+     * @param title         Judul catatan
+     * @param plainText     Teks transkripsi
+     * @param detectedLang  Language code dari Note
+     * @return Result<String> berisi ringkasan lengkap
+     */
+    suspend fun summarizeDetailed(
+        ctx: Context,
+        title: String,
+        plainText: String,
+        detectedLang: String = "auto"
+    ): Result<String> = withContext(Dispatchers.IO) {
+        val apiKey = GroqTranscriber.getApiKey(ctx)
+        if (apiKey.isBlank()) {
+            return@withContext Result.failure(Exception("NO_KEY"))
+        }
+
+        try {
+            val resolvedLang = resolveLang(detectedLang, plainText)
+            val systemPrompt = buildSystemPromptDetailed(resolvedLang)
+            val userPrompt   = buildUserPromptDetailed(title, plainText, resolvedLang)
+
+            val requestBody = JSONObject().apply {
+                put("model", MODEL)
+                put("max_tokens", 2048)
+                put("temperature", 0.3)
+                put("messages", JSONArray().apply {
+                    put(JSONObject().apply {
+                        put("role", "system")
+                        put("content", systemPrompt)
+                    })
+                    put(JSONObject().apply {
+                        put("role", "user")
+                        put("content", userPrompt)
+                    })
+                })
+            }
+
+            val conn = URL(GROQ_URL).openConnection() as HttpURLConnection
+            conn.apply {
+                requestMethod = "POST"
+                setRequestProperty("Authorization", "Bearer $apiKey")
+                setRequestProperty("Content-Type", "application/json")
+                doOutput = true
+                connectTimeout = 30_000
+                readTimeout    = 90_000
+            }
+
+            OutputStreamWriter(conn.outputStream, "UTF-8").use {
+                it.write(requestBody.toString())
+            }
+
+            val responseCode = conn.responseCode
+            val responseText = if (responseCode == 200) {
+                conn.inputStream.bufferedReader().readText()
+            } else {
+                val err = conn.errorStream?.bufferedReader()?.readText() ?: ""
+                Log.e(TAG, "HTTP $responseCode: $err")
+                return@withContext Result.failure(Exception("HTTP $responseCode"))
+            }
+
+            val content = JSONObject(responseText)
+                .getJSONArray("choices")
+                .getJSONObject(0)
+                .getJSONObject("message")
+                .getString("content")
+                .trim()
+
+            Log.d(TAG, "Detailed summary generated (${content.length} chars)")
+            Result.success(content)
+
+        } catch (e: Exception) {
+            Log.e(TAG, "summarizeDetailed error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
     // ── Prompt builders ───────────────────────────────────────────────────────
 
     /**
@@ -278,6 +357,71 @@ object GroqSummarizer {
             else                  -> "Summarize the following study notes:"
         }
 
+        return """
+            $instruction
+            
+            Judul / Title: $title
+            
+            Transkripsi:
+            $truncated
+        """.trimIndent()
+    }
+
+    private fun buildSystemPromptDetailed(lang: String): String {
+        return when {
+            lang.startsWith("id") -> """
+                Kamu adalah asisten ahli pencatatan kajian Islam.
+                Buat Catatan Rapi LENGKAP dalam Bahasa Indonesia dengan struktur berikut:
+                
+                ## 📌 Tema Utama
+                (1-2 kalimat tema pokok kajian)
+                
+                ## 📖 Poin-Poin Utama
+                (5-10 poin, tiap poin diawali "• ")
+                
+                ## 🕌 Dalil & Referensi
+                (Sebutkan ayat Al-Qur'an, hadits, atau dalil yang disebutkan, format: "→ [Sumber]: kutipan/parafrase")
+                
+                ## 💡 Kesimpulan & Amal
+                (2-3 poin action item atau kesimpulan praktis)
+                
+                Pertahankan semua istilah Arab. Jika tidak ada dalil eksplisit, kosongkan bagian dalil.
+                Langsung tulis struktur tanpa preamble.
+            """.trimIndent()
+
+            lang.startsWith("ar") -> """
+                أنت مساعد متخصص في تدوين ملاحظات دروس الإسلام.
+                اكتب ملاحظات مفصلة باللغة العربية بالهيكل التالي:
+                
+                ## 📌 الموضوع الرئيسي
+                ## 📖 النقاط الأساسية
+                ## 🕌 الأدلة والمراجع
+                ## 💡 الخلاصة والعمل
+                
+                احرص على ذكر الآيات والأحاديث بدقة.
+            """.trimIndent()
+
+            else -> """
+                You are an expert Islamic study note assistant.
+                Create DETAILED study notes in the same language as the transcript:
+                
+                ## 📌 Main Theme
+                ## 📖 Key Points (5-10 bullet points)
+                ## 🕌 Dalil & References (Quran verses, hadith, scholarly references)
+                ## 💡 Conclusions & Action Items
+                
+                Preserve all Arabic terms. Write directly without preamble.
+            """.trimIndent()
+        }
+    }
+
+    private fun buildUserPromptDetailed(title: String, text: String, lang: String): String {
+        val truncated = if (text.length > 8000) text.take(8000) + "\n...[terpotong]" else text
+        val instruction = when {
+            lang.startsWith("id") -> "Buat Catatan Rapi Lengkap dari kajian berikut:"
+            lang.startsWith("ar") -> "أنشئ ملاحظات مفصلة للدرس التالي:"
+            else -> "Create detailed study notes from the following:"
+        }
         return """
             $instruction
             

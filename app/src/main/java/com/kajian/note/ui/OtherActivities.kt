@@ -259,6 +259,7 @@ class NotesListFragment : Fragment() {
     private val b get() = _b!!
     private val vm: RecordViewModel by activityViewModels()
     private lateinit var adapter: NotesAdapter
+    private var selectedFolderId: Long = -1L  // -1 = semua, 0 = tanpa folder, >0 = folder id
 
     override fun onCreateView(i: LayoutInflater, c: ViewGroup?, s: Bundle?): View {
         _b = FragmentNotesListBinding.inflate(i, c, false); return b.root
@@ -275,17 +276,75 @@ class NotesListFragment : Fragment() {
         b.rvNotes.layoutManager = LinearLayoutManager(requireContext())
         b.rvNotes.adapter = adapter
 
-        vm.allNotes.observe(viewLifecycleOwner) { updateList(it) }
+        vm.allNotes.observe(viewLifecycleOwner) { applyFilter(it) }
+
+        // Folder chips — hanya untuk Premium ke atas
+        val tier = UserManager.getCachedTier()
+        if (tier != UserManager.Tier.FREE) {
+            b.scrollFolderChips.visibility = View.VISIBLE
+            vm.allFolders.observe(viewLifecycleOwner) { folders -> buildFolderChips(folders) }
+        }
 
         b.etSearch.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 val q = s?.toString() ?: ""
-                if (q.isBlank()) vm.allNotes.observe(viewLifecycleOwner) { updateList(it) }
-                else vm.searchNotes(q).observe(viewLifecycleOwner) { updateList(it) }
+                if (q.isBlank()) vm.allNotes.observe(viewLifecycleOwner) { applyFilter(it) }
+                else vm.searchNotes(q).observe(viewLifecycleOwner) { applyFilter(it) }
             }
             override fun beforeTextChanged(s: CharSequence?, a: Int, b2: Int, c2: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b2: Int, c2: Int) {}
         })
+    }
+
+    private fun buildFolderChips(folders: List<com.kajian.note.model.Folder>) {
+        b.llFolderChips.removeAllViews()
+        val allChip = makeChip("📋 Semua", -1L)
+        b.llFolderChips.addView(allChip)
+        folders.forEach { folder ->
+            b.llFolderChips.addView(makeChip("${folder.emoji} ${folder.name}", folder.id))
+        }
+        updateChipSelection()
+    }
+
+    private fun makeChip(label: String, folderId: Long): android.widget.Button {
+        return android.widget.Button(requireContext(), null,
+            android.R.attr.borderlessButtonStyle).apply {
+            text = label
+            textSize = 12f
+            setPadding(28, 8, 28, 8)
+            setTextColor(if (folderId == selectedFolderId)
+                android.graphics.Color.parseColor("#00E676")
+            else
+                android.graphics.Color.parseColor("#99FFFFFF"))
+            setOnClickListener {
+                selectedFolderId = folderId
+                updateChipSelection()
+                vm.allNotes.value?.let { applyFilter(it) }
+            }
+        }
+    }
+
+    private fun updateChipSelection() {
+        for (i in 0 until b.llFolderChips.childCount) {
+            val chip = b.llFolderChips.getChildAt(i) as? android.widget.Button ?: continue
+            val fid = when (i) {
+                0 -> -1L
+                else -> (vm.allFolders.value?.getOrNull(i - 1))?.id ?: continue
+            }
+            chip.setTextColor(if (fid == selectedFolderId)
+                android.graphics.Color.parseColor("#00E676")
+            else
+                android.graphics.Color.parseColor("#99FFFFFF"))
+        }
+    }
+
+    private fun applyFilter(list: List<Note>) {
+        val filtered = when (selectedFolderId) {
+            -1L -> list
+            0L  -> list.filter { it.folderId == 0L }
+            else -> list.filter { it.folderId == selectedFolderId }
+        }
+        updateList(filtered)
     }
 
     private fun updateList(list: List<Note>) {

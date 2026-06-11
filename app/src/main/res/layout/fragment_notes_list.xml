@@ -21,7 +21,16 @@
             android:textColor="@color/text_tertiary" android:textSize="11sp"/>
     </LinearLayout>
 
-    <!-- Empty state -->
+    <!-- Folder filter chips (visible only for Premium+) -->
+    <HorizontalScrollView android:id="@+id/scrollFolderChips"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:scrollbars="none" android:visibility="gone"
+        android:paddingHorizontal="12dp" android:paddingVertical="6dp"
+        android:background="@color/surface_dark">
+        <LinearLayout android:id="@+id/llFolderChips"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:gravity="center_vertical"/>
+    </HorizontalScrollView>
     <LinearLayout android:id="@+id/tvEmpty"
         android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
         android:orientation="vertical" android:gravity="center" android:visibility="gone">

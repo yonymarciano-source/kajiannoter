@@ -53,6 +53,9 @@ class NoteDetailActivity : AppCompatActivity() {
     private var summaryEdited = false
     private var summaryDraft = ""
 
+    // Tier (cached on load, refreshed on resume)
+    private var userTier = UserManager.Tier.FREE
+
     // Bookmark state
     private var bookmarks = mutableListOf<Int>()  // list timestamp dalam ms
     private var bookmarkIndex = -1                 // index bookmark terakhir di-jump
@@ -65,6 +68,12 @@ class NoteDetailActivity : AppCompatActivity() {
         b = ActivityNoteDetailBinding.inflate(layoutInflater)
         setContentView(b.root)
         prefs = PreferencesManager(this)
+
+        // Load tier (use cache, refresh async)
+        userTier = UserManager.getCachedTier()
+        lifecycleScope.launch {
+            userTier = UserManager.getTier()
+        }
 
         val id = intent.getLongExtra(EXTRA_ID, -1L)
         if (id == -1L) { finish(); return }
@@ -183,6 +192,16 @@ class NoteDetailActivity : AppCompatActivity() {
         b.btnExport.setOnClickListener    { showExportDialog(n) }
         b.btnEditTitle.setOnClickListener { showEditTitleDialog(n) }
 
+        // Folder button — hanya visible untuk Premium ke atas
+        if (userTier != UserManager.Tier.FREE) {
+            b.btnMoveFolder.isVisible = true
+            val folderLabel = vm.allFolders.value?.find { it.id == n.folderId }?.name
+            b.btnMoveFolder.text = if (folderLabel != null) "📁 $folderLabel" else "📁 Pindah Folder"
+            b.btnMoveFolder.setOnClickListener { showFolderPickerDialog(n) }
+        } else {
+            b.btnMoveFolder.isVisible = false
+        }
+
         if (currentTab != 0) showTab(currentTab)
     }
 
@@ -211,6 +230,28 @@ class NoteDetailActivity : AppCompatActivity() {
             .show()
     }
 
+    // ── Folder picker ─────────────────────────────────────────────────────────
+
+    private fun showFolderPickerDialog(n: Note) {
+        val folders = vm.allFolders.value ?: emptyList()
+        val items = mutableListOf("📋 Semua Catatan (tidak ada folder)") +
+                folders.map { "${it.emoji} ${it.name}" }
+        val folderIds = mutableListOf(0L) + folders.map { it.id }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("📁 Pilih Folder")
+            .setItems(items.toTypedArray()) { _, which ->
+                val selectedFolderId = folderIds[which]
+                val updated = n.copy(folderId = selectedFolderId, updatedAt = System.currentTimeMillis())
+                vm.updateNote(updated)
+                val label = if (which == 0) "Semua Catatan" else folders[which - 1].name
+                b.btnMoveFolder.text = if (which == 0) "📁 Pindah Folder" else "📁 $label"
+                Toast.makeText(this, "✅ Dipindah ke $label", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
     // ── Summary Panel (#8 editor + #9 save + #10 discard) ────────────────
 
     private fun loadSummaryPanel(n: Note) {
@@ -218,13 +259,34 @@ class NoteDetailActivity : AppCompatActivity() {
         summaryDraft = existingSummary
         summaryEdited = false
 
+        // Free user: tampilkan pesan locked
+        if (userTier == UserManager.Tier.FREE) {
+            b.tvSummaryEmpty.isVisible     = true
+            b.cardSummaryContent.isVisible = false
+            b.btnGenerateSummary.isVisible = false
+            b.tvSummaryEmpty.text = "🔒 Fitur Catatan Rapi tersedia untuk Premium & Subscriber.\n\nUpgrade untuk ringkasan otomatis via AI."
+            b.btnGenerateSummary.setOnClickListener {
+                startActivity(Intent(this, PaywallActivity::class.java).apply {
+                    putExtra(PaywallActivity.EXTRA_REASON, PaywallActivity.REASON_EXPORT)
+                })
+            }
+            b.btnGenerateSummary.isVisible = true
+            b.btnGenerateSummary.text = "⭐ Upgrade ke Premium"
+            return
+        }
+
+        // Label mode: Standar (Premium) atau Lengkap (Subscriber)
+        val modeLabel = if (userTier == UserManager.Tier.SUBSCRIBER)
+            "✦ Catatan Rapi Lengkap (Subscriber)" else "✦ Catatan Rapi Standar (Premium)"
+
         if (existingSummary.isNotBlank()) {
             showSummaryContent(existingSummary, n)
         } else {
             b.tvSummaryEmpty.isVisible   = true
             b.cardSummaryContent.isVisible = false
-            b.tvSummaryEmpty.text = "Belum ada ringkasan.\n\nTap tombol di bawah untuk generate otomatis via Groq AI."
+            b.tvSummaryEmpty.text = "Belum ada ringkasan.\n\n$modeLabel\nTap tombol di bawah untuk generate otomatis via Groq AI."
             b.btnGenerateSummary.isVisible = true
+            b.btnGenerateSummary.text = "✦ Generate Sekarang"
         }
 
         b.btnGenerateSummary.setOnClickListener { generateSummary(n) }
@@ -244,19 +306,41 @@ class NoteDetailActivity : AppCompatActivity() {
     }
 
     private fun generateSummary(n: Note) {
+        // ── Tier gate ─────────────────────────────────────────────────────────
+        if (userTier == UserManager.Tier.FREE) {
+            startActivity(Intent(this, PaywallActivity::class.java).apply {
+                putExtra(PaywallActivity.EXTRA_REASON, PaywallActivity.REASON_EXPORT)
+            })
+            return
+        }
+
         b.btnGenerateSummary.isEnabled = false
         b.btnRedoSummary.isEnabled = false
-        b.tvSummaryEmpty.text = "⏳ Membuat ringkasan via Groq AI..."
+
+        val isDetailed = userTier == UserManager.Tier.SUBSCRIBER
+        b.tvSummaryEmpty.text = if (isDetailed)
+            "⏳ Membuat Catatan Rapi Lengkap (Subscriber)..."
+        else
+            "⏳ Membuat ringkasan via Groq AI..."
         b.tvSummaryEmpty.isVisible = true
         b.cardSummaryContent.isVisible = false
 
         lifecycleScope.launch {
-            val result = GroqSummarizer.summarize(
-                ctx          = this@NoteDetailActivity,
-                title        = n.title,
-                plainText    = n.plainText,
-                detectedLang = n.detectedLanguage
-            )
+            val result = if (isDetailed) {
+                GroqSummarizer.summarizeDetailed(
+                    ctx          = this@NoteDetailActivity,
+                    title        = n.title,
+                    plainText    = n.plainText,
+                    detectedLang = n.detectedLanguage
+                )
+            } else {
+                GroqSummarizer.summarize(
+                    ctx          = this@NoteDetailActivity,
+                    title        = n.title,
+                    plainText    = n.plainText,
+                    detectedLang = n.detectedLanguage
+                )
+            }
             b.btnGenerateSummary.isEnabled = true
             b.btnRedoSummary.isEnabled = true
 
@@ -264,7 +348,6 @@ class NoteDetailActivity : AppCompatActivity() {
                 summaryDraft = summary
                 summaryEdited = true
                 showSummaryContent(summary, n)
-                // Auto-save summary to note
                 saveSummaryToNote(n, summary)
             }.onFailure { e ->
                 b.tvSummaryEmpty.text = "❌ Gagal: ${e.message}\n\nPastikan Groq API Key sudah diset di Settings."
@@ -831,6 +914,13 @@ class NoteDetailActivity : AppCompatActivity() {
     // ── Export ────────────────────────────────────────────────────────────
 
     private fun showExportDialog(n: Note) {
+        // ── Tier gate ─────────────────────────────────────────────────────────
+        if (userTier == UserManager.Tier.FREE) {
+            startActivity(Intent(this, PaywallActivity::class.java).apply {
+                putExtra(PaywallActivity.EXTRA_REASON, PaywallActivity.REASON_EXPORT)
+            })
+            return
+        }
         val options = arrayOf("📄 PDF saja", "📝 Word (DOCX) saja", "📦 PDF + DOCX (keduanya)")
         MaterialAlertDialogBuilder(this)
             .setTitle("Export Catatan")

@@ -82,6 +82,7 @@ object AssemblyAITranscriber {
         val langCode = when {
             language.startsWith("ar") -> "ar"
             language.startsWith("en") -> "en"
+            language == "auto"        -> null  // AssemblyAI auto-detect 99 bahasa
             else -> "id"
         }
         val transcriptId = submitJob(apiKey, uploadUrl, langCode, maxSpeakers)
@@ -123,13 +124,14 @@ object AssemblyAITranscriber {
     private fun submitJob(
         apiKey: String,
         audioUrl: String,
-        language: String,
+        language: String?,
         maxSpeakers: Int
     ): String {
         val bodyJson = JSONObject().apply {
             put("audio_url", audioUrl)
             put("speaker_labels", true)
-            put("language_code", language)
+            if (language != null) put("language_code", language)
+            else put("language_detection", true)  // AssemblyAI auto-detect
             put("punctuate", true)
             put("format_text", true)
             if (maxSpeakers > 0) put("speakers_expected", maxSpeakers)

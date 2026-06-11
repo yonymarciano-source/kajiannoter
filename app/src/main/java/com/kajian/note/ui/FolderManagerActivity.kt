@@ -1,5 +1,6 @@
 package com.kajian.note.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +16,7 @@ import com.kajian.note.databinding.ActivityFolderManagerBinding
 import com.kajian.note.databinding.ItemFolderBinding
 import com.kajian.note.db.NoteRepository
 import com.kajian.note.model.Folder
+import com.kajian.note.utils.UserManager
 import kotlinx.coroutines.launch
 
 class FolderManagerActivity : AppCompatActivity() {
@@ -33,6 +35,15 @@ class FolderManagerActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Kelola Folder"
+
+        // ── Tier gate ─────────────────────────────────────────────────────────
+        if (UserManager.getCachedTier() == UserManager.Tier.FREE) {
+            startActivity(Intent(this, PaywallActivity::class.java).apply {
+                putExtra(PaywallActivity.EXTRA_REASON, PaywallActivity.REASON_EXPORT)
+            })
+            finish()
+            return
+        }
 
         repo = NoteRepository(this)
 

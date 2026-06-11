@@ -184,8 +184,8 @@ class SpeakerFragment : Fragment() {
     // ── Language chips ────────────────────────────────────────────────────
 
     private fun setupLangChips() {
-        val chips = listOf(b.chipLangId, b.chipLangAr, b.chipLangAuto)
-        val langs = listOf("id", "ar", "auto")
+        val chips = listOf(b.chipLangId, b.chipLangAr, b.chipLangEn, b.chipLangAuto)
+        val langs = listOf("id", "ar", "en", "auto")
 
         fun select(idx: Int) {
             chips.forEachIndexed { i, chip ->
@@ -284,7 +284,8 @@ class SpeakerFragment : Fragment() {
         // Determine selected language
         val lang = when {
             b.chipLangAr.isSelected -> "ar"
-            b.chipLangAuto.isSelected -> "id"
+            b.chipLangEn.isSelected -> "en"
+            b.chipLangAuto.isSelected -> "auto"
             else -> "id"
         }
 
