@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KajianNote</string>
+    <string name="tab_record">🎙️ Registra</string><string name="tab_notes">📚 Note</string>
+    <string name="status_idle">Pronto a registrare</string><string name="status_recording">🔴 Registrazione…</string>
+    <string name="change_lang">Cambia</string><string name="lang_audio">Lingua Audio</string>
+    <string name="name_speaker">Nomina</string><string name="next_speaker">Prossimo Oratore</string>
+    <string name="name_speaker_title">Nomina Questo Oratore</string>
+    <string name="name_speaker_msg">Inserisci un nome per l\'Oratore %1$s</string>
+    <string name="speaker_renamed">Rinominato in %1$s</string><string name="now_speaking">Sta parlando</string>
+    <string name="speaker_change_detected">Nuovo oratore? Passare a %1$s?</string>
+    <string name="yes">Sì</string><string name="no">No</string>
+    <string name="btn_save">💾 Salva</string><string name="btn_clear">🗑️ Cancella</string>
+    <string name="btn_share">📤 Condividi</string><string name="btn_copy">📋 Copia</string>
+    <string name="save_note">Salva Nota</string><string name="save_success">✅ Salvato con successo!</string>
+    <string name="clear_confirm_title">Cancellare la trascrizione?</string><string name="clear_confirm_msg">Tutto il testo registrato verrà eliminato.</string>
+    <string name="clear">Cancella</string><string name="delete">Elimina</string>
+    <string name="delete_confirm_title">Eliminare la nota?</string><string name="delete_confirm_msg">"%1$s" verrà eliminato definitivamente.</string>
+    <string name="search_hint">🔍 Cerca note…</string><string name="no_notes">Ancora nessuna nota</string>
+    <string name="no_notes_sub">Inizia a registrare una lezione\ne salva le tue note</string><string name="notes_saved">note salvate</string>
+    <string name="label_notes">📝 Trascrizione</string><string name="hint_transcript">Il testo apparirà qui…</string>
+    <string name="words">parole</string><string name="settings">Impostazioni</string>
+    <string name="app_language">Lingua App</string><string name="speaker_sensitivity">Sensibilità cambio oratore</string>
+    <string name="share_via">Condividi via…</string><string name="copied">📋 Copiato negli appunti</string>
+    <string name="error_mic_permission">È necessaria l\'autorizzazione al microfono per registrare.</string>
+    <string name="tips_text">💡 Suggerimenti:\n• Premi il tasto verde per registrare\n• Lingua rilevata automaticamente\n• Ogni 2 min un marcatore ⏱\n• Silenzio &gt; 3.5s = cambio oratore</string>
+</resources>

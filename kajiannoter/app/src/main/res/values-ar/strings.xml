@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">كجيان نوت</string>
+    <string name="tab_record">🎙️ تسجيل</string>
+    <string name="tab_notes">📚 ملاحظات</string>
+    <string name="status_idle">جاهز للتسجيل</string>
+    <string name="status_recording">🔴 جارٍ التسجيل…</string>
+    <string name="change_lang">تغيير</string>
+    <string name="lang_audio">لغة الصوت</string>
+    <string name="name_speaker">تسمية</string>
+    <string name="next_speaker">المتحدث التالي</string>
+    <string name="name_speaker_title">تسمية هذا المتحدث</string>
+    <string name="name_speaker_msg">أدخل اسمًا للمتحدث %1$s</string>
+    <string name="speaker_renamed">تمت إعادة التسمية إلى %1$s</string>
+    <string name="now_speaking">يتحدث الآن</string>
+    <string name="speaker_change_detected">متحدث جديد؟ التبديل إلى %1$s؟</string>
+    <string name="yes">نعم</string>
+    <string name="no">لا</string>
+    <string name="btn_save">💾 حفظ</string>
+    <string name="btn_clear">🗑️ مسح</string>
+    <string name="btn_share">📤 مشاركة</string>
+    <string name="btn_copy">📋 نسخ</string>
+    <string name="save_note">حفظ الملاحظة</string>
+    <string name="save_success">✅ تم الحفظ بنجاح!</string>
+    <string name="clear_confirm_title">مسح النص؟</string>
+    <string name="clear_confirm_msg">سيتم حذف كل النص المسجل.</string>
+    <string name="clear">مسح</string>
+    <string name="delete">حذف</string>
+    <string name="delete_confirm_title">حذف الملاحظة؟</string>
+    <string name="delete_confirm_msg">سيتم حذف "%1$s" نهائيًا.</string>
+    <string name="search_hint">🔍 البحث في الملاحظات…</string>
+    <string name="no_notes">لا توجد ملاحظات بعد</string>
+    <string name="no_notes_sub">ابدأ تسجيل الدرس\nواحفظ ملاحظاتك</string>
+    <string name="notes_saved">ملاحظة محفوظة</string>
+    <string name="label_notes">📝 النص</string>
+    <string name="hint_transcript">سيظهر النص هنا…</string>
+    <string name="words">كلمة</string>
+    <string name="settings">الإعدادات</string>
+    <string name="app_language">لغة التطبيق</string>
+    <string name="speaker_sensitivity">حساسية تغيير المتحدث</string>
+    <string name="share_via">مشاركة عبر…</string>
+    <string name="copied">📋 تم النسخ</string>
+    <string name="error_mic_permission">مطلوب إذن الميكروفون للتسجيل.</string>
+    <string name="tips_text">💡 نصائح:\n• اضغط الزر الأخضر للتسجيل\n• تكشف اللغة تلقائيًا\n• كل دقيقتين تُضاف علامة زمنية ⏱\n• صمت أكثر من ٣.٥ ثانية = تغيير متحدث</string>
+</resources>

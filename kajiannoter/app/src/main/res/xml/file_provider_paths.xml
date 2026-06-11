@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- External app-specific Documents folder (no permission needed, API 19+) -->
+    <external-files-path
+        name="kajian_exports"
+        path="Documents/KajianNote/" />
+</paths>

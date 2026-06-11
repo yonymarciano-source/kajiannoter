@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v4.0 Islami Palette — Teal + Deep Navy + Warm Gold -->
+    <color name="primary_green">#00BFA5</color>        <!-- Teal islami -->
+    <color name="primary_green_dark">#00897B</color>
+    <color name="primary_green_light">#B2DFDB</color>
+    <color name="recording_red">#EF5350</color>
+    <color name="accent_blue">#5C6BC0</color>           <!-- Indigo -->
+    <color name="accent_gold">#FFB300</color>           <!-- Gold aksen -->
+
+    <!-- Backgrounds — deep navy -->
+    <color name="bg_dark">#0B0F1C</color>
+    <color name="surface_dark">#131929</color>
+    <color name="surface_variant">#1C2438</color>
+    <color name="surface_elevated">#212B42</color>
+    <color name="hint_bg">#141E30</color>
+
+    <!-- Text -->
+    <color name="text_primary">#EEF2FF</color>
+    <color name="text_secondary">#8B9BBF</color>
+    <color name="text_tertiary">#3D4B6E</color>
+
+    <!-- Misc -->
+    <color name="white">#FFFFFF</color>
+    <color name="divider">#1C2438</color>
+    <color name="speaker_a">#5C6BC0</color>
+    <color name="speaker_b">#00BFA5</color>
+    <color name="speaker_c">#FF7043</color>
+    <color name="speaker_d">#AB47BC</color>
+
+    <!-- Material theme -->
+    <color name="colorPrimary">#00BFA5</color>
+    <color name="colorPrimaryVariant">#00897B</color>
+    <color name="colorOnPrimary">#0B0F1C</color>
+    <color name="colorSecondary">#5C6BC0</color>
+    <color name="colorOnSecondary">#FFFFFF</color>
+    <color name="colorSurface">#131929</color>
+    <color name="colorOnSurface">#EEF2FF</color>
+    <color name="colorBackground">#0B0F1C</color>
+    <color name="colorOnBackground">#EEF2FF</color>
+    <color name="colorError">#EF5350</color>
+    <color name="colorOnError">#FFFFFF</color>
+
+    <!-- Premium badges -->
+    <color name="tier_free">#3D4B6E</color>
+    <color name="tier_premium">#FFB300</color>
+    <color name="tier_subscriber">#5C6BC0</color>
+</resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:gravity="center"
+    android:background="@color/bg_dark">
+    <ImageView android:id="@+id/ivLogo"
+        android:layout_width="96dp" android:layout_height="96dp"
+        android:src="@mipmap/ic_launcher" android:layout_marginBottom="24dp"/>
+    <TextView android:id="@+id/tvAppName"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="KajianNote" android:textSize="32sp" android:textStyle="bold"
+        android:textColor="@color/text_primary" android:layout_marginBottom="12dp"
+        android:fontFamily="sans-serif-medium"/>
+    <TextView android:id="@+id/tvTagline"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="Your AI-powered lecture companion" android:textSize="15sp"
+        android:textColor="@color/primary_green" android:gravity="center"/>
+</LinearLayout>

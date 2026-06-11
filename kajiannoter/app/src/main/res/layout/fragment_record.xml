@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/bg_dark" android:fillViewport="true">
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="16dp">
+
+        <!-- Options Card — Opsi C: Chip Selector -->
+        <androidx.cardview.widget.CardView android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginBottom="12dp"
+            app:cardCornerRadius="20dp" app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/surface_dark">
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="16dp">
+
+                <!-- ROW 1: Bahasa -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="🌐" android:textSize="13sp" android:layout_marginEnd="6dp"/>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="Bahasa"
+                        android:textColor="#888888" android:textSize="12sp" android:textStyle="bold"
+                        android:letterSpacing="0.04"/>
+                    <Button android:id="@+id/btnInfoLang"
+                        android:layout_width="20dp" android:layout_height="20dp"
+                        android:text="i" android:textSize="10sp" android:textStyle="italic"
+                        android:textColor="#555555" android:padding="0dp"
+                        android:background="@drawable/bg_info_btn"
+                        android:stateListAnimator="@null"
+                        android:minWidth="0dp" android:minHeight="0dp"/>
+                </LinearLayout>
+
+                <!-- Chips bahasa — horizontal scroll -->
+                <HorizontalScrollView android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none" android:overScrollMode="never"
+                    android:layout_marginBottom="14dp">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:orientation="horizontal" android:gravity="center_vertical" android:padding="2dp">
+                        <TextView android:id="@+id/chipLangId"
+                            android:layout_width="wrap_content" android:layout_height="36dp"
+                            android:text="🇮🇩 Indonesia" android:textSize="12sp" android:fontFamily="sans-serif-medium"
+                            android:gravity="center" android:paddingHorizontal="14dp"
+                            android:background="@drawable/bg_chip_active"
+                            android:textColor="@color/primary_green"
+                            android:layout_marginEnd="6dp"/>
+                        <TextView android:id="@+id/chipLangEn"
+                            android:layout_width="wrap_content" android:layout_height="36dp"
+                            android:text="🇺🇸 English" android:textSize="12sp" android:fontFamily="sans-serif-medium"
+                            android:gravity="center" android:paddingHorizontal="14dp"
+                            android:background="@drawable/bg_chip_inactive"
+                            android:textColor="#666666"
+                            android:layout_marginEnd="6dp"/>
+                        <TextView android:id="@+id/chipLangAr"
+                            android:layout_width="wrap_content" android:layout_height="36dp"
+                            android:text="🌙 Arab" android:textSize="12sp" android:fontFamily="sans-serif-medium"
+                            android:gravity="center" android:paddingHorizontal="14dp"
+                            android:background="@drawable/bg_chip_inactive"
+                            android:textColor="#666666"
+                            android:layout_marginEnd="6dp"/>
+                        <TextView android:id="@+id/chipLangAuto"
+                            android:layout_width="wrap_content" android:layout_height="36dp"
+                            android:text="🌐 Auto" android:textSize="12sp" android:fontFamily="sans-serif-medium"
+                            android:gravity="center" android:paddingHorizontal="14dp"
+                            android:background="@drawable/bg_chip_inactive"
+                            android:textColor="#666666"/>
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+                <!-- Divider -->
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="#15FFFFFF" android:layout_marginBottom="14dp"/>
+
+                <!-- ROW 2: Mode -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="🎙" android:textSize="13sp" android:layout_marginEnd="6dp"/>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="Mode Rekam"
+                        android:textColor="#888888" android:textSize="12sp" android:textStyle="bold"/>
+                    <Button android:id="@+id/btnInfoMode"
+                        android:layout_width="20dp" android:layout_height="20dp"
+                        android:text="i" android:textSize="10sp" android:textStyle="italic"
+                        android:textColor="#555555" android:padding="0dp"
+                        android:background="@drawable/bg_info_btn"
+                        android:stateListAnimator="@null"
+                        android:minWidth="0dp" android:minHeight="0dp"/>
+                </LinearLayout>
+
+                <HorizontalScrollView android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none" android:overScrollMode="never"
+                    android:layout_marginBottom="14dp">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:orientation="horizontal" android:gravity="center_vertical" android:padding="2dp">
+                        <TextView android:id="@+id/chipModeGroq"
+                            android:layout_width="wrap_content" android:layout_height="36dp"
+                            android:text="⚡ Langsung (Groq)" android:textSize="12sp"
+                            android:fontFamily="sans-serif-medium"
+                            android:gravity="center" android:paddingHorizontal="14dp"
+                            android:background="@drawable/bg_chip_active"
+                            android:textColor="@color/primary_green"
+                            android:layout_marginEnd="6dp"/>
+                        <TextView android:id="@+id/chipModeStt"
+                            android:layout_width="wrap_content" android:layout_height="36dp"
+                            android:text="🎤 Langsung (STT)" android:textSize="12sp"
+                            android:fontFamily="sans-serif-medium"
+                            android:gravity="center" android:paddingHorizontal="14dp"
+                            android:background="@drawable/bg_chip_inactive"
+                            android:textColor="#666666"
+                            android:layout_marginEnd="6dp"/>
+                        <TextView android:id="@+id/chipModeRekam"
+                            android:layout_width="wrap_content" android:layout_height="36dp"
+                            android:text="🔴 Rekam dulu" android:textSize="12sp"
+                            android:fontFamily="sans-serif-medium"
+                            android:gravity="center" android:paddingHorizontal="14dp"
+                            android:background="@drawable/bg_chip_inactive"
+                            android:textColor="#666666"/>
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+                <!-- Divider -->
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="#15FFFFFF" android:layout_marginBottom="14dp"/>
+
+                <!-- ROW 3: Sumber -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="🔊" android:textSize="13sp" android:layout_marginEnd="6dp"/>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="Sumber Audio"
+                        android:textColor="#888888" android:textSize="12sp" android:textStyle="bold"/>
+                    <Button android:id="@+id/btnInfoAudio"
+                        android:layout_width="20dp" android:layout_height="20dp"
+                        android:text="i" android:textSize="10sp" android:textStyle="italic"
+                        android:textColor="#555555" android:padding="0dp"
+                        android:background="@drawable/bg_info_btn"
+                        android:stateListAnimator="@null"
+                        android:minWidth="0dp" android:minHeight="0dp"/>
+                </LinearLayout>
+
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:padding="2dp">
+                    <TextView android:id="@+id/chipAudioNormal"
+                        android:layout_width="wrap_content" android:layout_height="36dp"
+                        android:text="🎤 Normal" android:textSize="12sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center" android:paddingHorizontal="14dp"
+                        android:background="@drawable/bg_chip_active"
+                        android:textColor="@color/primary_green"
+                        android:layout_marginEnd="6dp"/>
+                    <TextView android:id="@+id/chipAudioSpeaker"
+                        android:layout_width="wrap_content" android:layout_height="36dp"
+                        android:text="📢 Speaker" android:textSize="12sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center" android:paddingHorizontal="14dp"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:textColor="#666666"/>
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Record Card -->
+        <androidx.cardview.widget.CardView android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginBottom="14dp"
+            app:cardCornerRadius="24dp" app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/surface_dark">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:gravity="center"
+                android:paddingVertical="28dp" android:paddingHorizontal="20dp">
+                <com.kajian.note.ui.WaveformView android:id="@+id/waveformView"
+                    android:layout_width="match_parent" android:layout_height="44dp"
+                    android:visibility="gone"/>
+                <TextView android:id="@+id/tvTimer"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="00:00" android:textSize="52sp" android:textStyle="bold"
+                    android:textColor="@color/text_primary" android:fontFamily="monospace"
+                    android:layout_marginTop="8dp"/>
+                <TextView android:id="@+id/tvStatus"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/status_idle" android:textColor="@color/text_secondary"
+                    android:textSize="13sp" android:layout_marginTop="4dp"
+                    android:layout_marginBottom="20dp"/>
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabRecord" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:src="@drawable/ic_mic"
+                    app:backgroundTint="@color/primary_green" app:tint="@color/bg_dark"
+                    app:fabSize="normal"/>
+                <TextView android:id="@+id/tvPartial"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textColor="@color/text_tertiary" android:textSize="12sp"
+                    android:gravity="center" android:layout_marginTop="12dp"
+                    android:visibility="gone"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Card hint -->
+        <androidx.cardview.widget.CardView android:id="@+id/cardHint"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp" app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/surface_dark">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="16dp">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Tap tombol rekam untuk mulai mencatat kajian."
+                    android:textColor="@color/text_tertiary" android:textSize="13sp"
+                    android:gravity="center"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Transcript -->
+        <EditText android:id="@+id/etTranscript"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:minHeight="100dp" android:gravity="top|start"
+            android:background="@null" android:padding="8dp"
+            android:textColor="@color/text_primary" android:textSize="15sp"
+            android:lineSpacingExtra="6dp" android:inputType="textMultiLine|textCapSentences"
+            android:hint="Transkripsi akan muncul di sini..."
+            android:textColorHint="@color/text_tertiary"/>
+        <TextView android:id="@+id/tvWordCount"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="0 kata" android:textColor="@color/text_tertiary"
+            android:textSize="11sp" android:gravity="end" android:layout_marginBottom="8dp"/>
+
+        <!-- Save/Clear -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:weightSum="2" android:layout_marginBottom="80dp">
+            <Button android:id="@+id/btnSave" android:layout_width="0dp" android:layout_height="48dp"
+                android:layout_weight="1" android:layout_marginEnd="6dp"
+                android:text="@string/save_note" android:textColor="#121212" android:textStyle="bold"
+                android:backgroundTint="@color/primary_green" android:stateListAnimator="@null"
+                android:enabled="false"/>
+            <Button android:id="@+id/btnClear" style="@style/ActionBtnSecondary"
+                android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                android:text="@string/clear"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

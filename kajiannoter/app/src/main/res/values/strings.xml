@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KajianNote</string>
+    <string name="tab_record">Record</string>
+    <string name="tab_notes">Notes</string>
+    <string name="status_idle">Ready to record</string>
+    <string name="status_recording">Recording...</string>
+    <string name="change_lang">Change</string>
+    <string name="lang_audio">Audio Language</string>
+    <string name="name_speaker">Name</string>
+    <string name="next_speaker">Next Speaker</string>
+    <string name="name_speaker_title">Name This Speaker</string>
+    <string name="name_speaker_msg">Enter a name for Speaker %1$s</string>
+    <string name="speaker_renamed">Renamed to %1$s</string>
+    <string name="now_speaking">Now speaking</string>
+    <string name="speaker_change_detected">New speaker? Switch to %1$s?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_clear">Clear</string>
+    <string name="btn_share">Share</string>
+    <string name="btn_copy">Copy</string>
+    <string name="save_note">Save Note</string>
+    <string name="save_success">Saved!</string>
+    <string name="clear_confirm_title">Clear transcript?</string>
+    <string name="clear_confirm_msg">All recorded text will be deleted.</string>
+    <string name="clear">Clear</string>
+    <string name="delete">Delete</string>
+    <string name="delete_confirm_title">Delete note?</string>
+    <string name="delete_confirm_msg">"%1$s" will be permanently deleted.</string>
+    <string name="search_hint">Search notes...</string>
+    <string name="no_notes">No notes yet</string>
+    <string name="no_notes_sub">Start recording a kajian and save your notes</string>
+    <string name="notes_saved">notes saved</string>
+    <string name="label_notes">Transcript</string>
+    <string name="hint_transcript">Transcript will appear here. You can also type manually.</string>
+    <string name="words">words</string>
+    <string name="settings">Settings</string>
+    <string name="app_language">App Language</string>
+    <string name="speaker_sensitivity">Speaker Change Sensitivity</string>
+    <string name="share_via">Share via...</string>
+    <string name="copied">Copied to clipboard</string>
+    <string name="btn_export">Export</string>
+    <string name="export_title">Export Catatan</string>
+    <string name="export_success">Export berhasil!</string>
+    <string name="claude_key_hint">sk-ant-api03-xxx...</string>
+    <string name="error_mic_permission">Microphone permission is required to record.</string>
+    <string name="tips_text">💡 Tips Recording:
+• Tap tombol hijau untuk mulai
+• Bahasa terdeteksi otomatis dari HP
+• Timestamp ⏱ otomatis setiap 2 menit
+• Saat pembicara berganti → tap NEXT ▶
+• Kembali ke pembicara sebelumnya → tap ◀ PREV
+• Long press nama speaker untuk rename
+• Teks bisa diedit langsung setelah recording</string>
+
+    <!-- v4.0 strings -->
+    <string name="login_title">Masuk ke KajianNote</string>
+    <string name="login_tagline">Apps untuk para penuntut ilmu</string>
+    <string name="login_google">Masuk dengan Google</string>
+    <string name="login_skip">Lanjut tanpa akun</string>
+    <string name="tier_free">Gratis</string>
+    <string name="tier_premium">Premium</string>
+    <string name="tier_subscriber">Subscriber</string>
+    <string name="paywall_limit">Batas catatan gratis tercapai</string>
+    <string name="note_limit_reached">Kamu sudah punya 10 catatan (batas gratis). Upgrade untuk catatan tak terbatas.</string>
+    <string name="folder_all">Semua Catatan</string>
+    <string name="folder_new">Folder Baru</string>
+    <string name="upgrade_now">Upgrade Sekarang</string>
+    <string name="default_web_client_id">466508064963-6ng1t1p9j2r06243s0bliq8bcqqk9kit.apps.googleusercontent.com</string>
+</resources>

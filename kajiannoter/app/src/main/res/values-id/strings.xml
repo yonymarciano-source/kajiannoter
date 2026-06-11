@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KajianNote</string>
+    <string name="tab_record">Rekam</string>
+    <string name="tab_notes">Catatan</string>
+    <string name="status_idle">Siap merekam</string>
+    <string name="status_recording">Merekam...</string>
+    <string name="change_lang">Ubah</string>
+    <string name="lang_audio">Bahasa Audio</string>
+    <string name="name_speaker">Beri Nama</string>
+    <string name="next_speaker">Ganti Pembicara</string>
+    <string name="name_speaker_title">Beri Nama Pembicara</string>
+    <string name="name_speaker_msg">Masukkan nama untuk Pembicara %1$s</string>
+    <string name="speaker_renamed">Diganti menjadi %1$s</string>
+    <string name="now_speaking">Sekarang bicara</string>
+    <string name="speaker_change_detected">Pembicara baru? Ganti ke %1$s?</string>
+    <string name="yes">Ya</string>
+    <string name="no">Tidak</string>
+    <string name="btn_save">Simpan</string>
+    <string name="btn_clear">Hapus</string>
+    <string name="btn_share">Bagikan</string>
+    <string name="btn_copy">Salin</string>
+    <string name="save_note">Simpan Catatan</string>
+    <string name="save_success">Berhasil disimpan!</string>
+    <string name="clear_confirm_title">Hapus transkrip?</string>
+    <string name="clear_confirm_msg">Semua teks yang direkam akan dihapus.</string>
+    <string name="clear">Hapus</string>
+    <string name="delete">Hapus</string>
+    <string name="delete_confirm_title">Hapus catatan?</string>
+    <string name="delete_confirm_msg">"%1$s" akan dihapus permanen.</string>
+    <string name="search_hint">Cari catatan...</string>
+    <string name="no_notes">Belum ada catatan</string>
+    <string name="no_notes_sub">Mulai rekam kajian dan simpan catatannya</string>
+    <string name="notes_saved">catatan tersimpan</string>
+    <string name="label_notes">Transkrip</string>
+    <string name="hint_transcript">Teks hasil rekaman akan muncul di sini.</string>
+    <string name="words">kata</string>
+    <string name="settings">Pengaturan</string>
+    <string name="app_language">Bahasa Aplikasi</string>
+    <string name="speaker_sensitivity">Sensitivitas Ganti Pembicara</string>
+    <string name="share_via">Bagikan via...</string>
+    <string name="copied">Disalin ke clipboard</string>
+    <string name="error_mic_permission">Izin mikrofon diperlukan untuk merekam.</string>
+    <string name="tips_text">Tips: Tekan tombol hijau untuk mulai. Bahasa terdeteksi otomatis. Timestamp tiap 2 menit. Diam 3.5 detik = prompt ganti pembicara.</string>
+</resources>

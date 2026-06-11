@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:background="@color/bg_dark">
+
+    <!-- Search bar -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="52dp"
+        android:orientation="horizontal" android:gravity="center_vertical"
+        android:background="@color/surface_dark"
+        android:paddingHorizontal="16dp" android:paddingVertical="8dp"
+        android:layout_marginBottom="1dp">
+        <ImageView android:layout_width="18dp" android:layout_height="18dp"
+            android:src="@drawable/ic_search" android:layout_marginEnd="10dp"/>
+        <EditText android:id="@+id/etSearch"
+            android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:background="@null" android:hint="@string/search_hint"
+            android:textColorHint="@color/text_tertiary" android:textColor="@color/text_primary"
+            android:textSize="14sp" android:inputType="text" android:imeOptions="actionSearch"/>
+        <TextView android:id="@+id/tvCount"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="@color/text_tertiary" android:textSize="11sp"/>
+    </LinearLayout>
+
+    <!-- Empty state -->
+    <LinearLayout android:id="@+id/tvEmpty"
+        android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:orientation="vertical" android:gravity="center" android:visibility="gone">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="🎙️" android:textSize="72sp" android:layout_marginBottom="20dp"/>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/no_notes" android:textColor="@color/text_primary"
+            android:textSize="20sp" android:textStyle="bold" android:layout_marginBottom="8dp"/>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/no_notes_sub" android:textColor="@color/text_secondary"
+            android:textSize="14sp" android:gravity="center" android:lineSpacingExtra="4dp"/>
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView android:id="@+id/rvNotes"
+        android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:paddingTop="8dp" android:paddingBottom="24dp" android:clipToPadding="false"/>
+</LinearLayout>

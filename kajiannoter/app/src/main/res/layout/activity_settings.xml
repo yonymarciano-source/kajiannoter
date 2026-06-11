@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:background="@color/bg_dark">
+
+    <com.google.android.material.appbar.AppBarLayout android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:background="@color/surface_dark">
+        <androidx.appcompat.widget.Toolbar android:id="@+id/toolbar"
+            android:layout_width="match_parent" android:layout_height="?attr/actionBarSize"
+            app:titleTextColor="@color/text_primary" app:navigationIconTint="@color/text_primary"/>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- ScrollView agar tidak terpotong di HP kecil -->
+    <ScrollView android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:fillViewport="true">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:paddingBottom="32dp">
+
+            <!-- ══ INTERFACE ══════════════════════════════════════════════ -->
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="Interface" android:textStyle="bold" android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:paddingHorizontal="20dp" android:paddingTop="20dp" android:paddingBottom="6dp"/>
+
+            <LinearLayout android:id="@+id/rowAppLang" android:layout_width="match_parent" android:layout_height="56dp"
+                android:orientation="horizontal" android:gravity="center_vertical" android:paddingHorizontal="20dp"
+                android:background="@color/surface_dark" android:layout_marginBottom="1dp"
+                android:foreground="?attr/selectableItemBackground">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                    android:text="@string/app_language" android:textColor="@color/text_primary" android:textSize="15sp"/>
+                <TextView android:id="@+id/tvAppLang" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:textColor="@color/text_secondary" android:textSize="14sp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text=" ›" android:textColor="@color/text_tertiary" android:textSize="18sp"/>
+            </LinearLayout>
+
+            <!-- ══ AUTO-CORRECT ══════════════════════════════════════════ -->
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="Auto-Correct" android:textStyle="bold" android:textSize="12sp"
+                android:textColor="#8892B0"
+                android:paddingHorizontal="20dp" android:paddingTop="20dp" android:paddingBottom="6dp"/>
+
+            <LinearLayout android:id="@+id/rowDictionary" android:layout_width="match_parent" android:layout_height="64dp"
+                android:orientation="horizontal" android:gravity="center_vertical" android:paddingHorizontal="20dp"
+                android:background="@color/surface_dark" android:layout_marginBottom="1dp"
+                android:foreground="?attr/selectableItemBackground">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="📖 Kamus Koreksi" android:textColor="@color/text_primary" android:textSize="15sp"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Koreksi otomatis istilah kajian" android:textColor="@color/text_tertiary" android:textSize="12sp"/>
+                </LinearLayout>
+                <TextView android:id="@+id/tvDictStatus" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:textColor="#8892B0" android:textSize="13sp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text=" ›" android:textColor="@color/text_tertiary" android:textSize="18sp"/>
+            </LinearLayout>
+
+            <!-- ══ RECORDING ═════════════════════════════════════════════ -->
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="Recording" android:textStyle="bold" android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:paddingHorizontal="20dp" android:paddingTop="20dp" android:paddingBottom="6dp"/>
+
+            <LinearLayout android:id="@+id/rowRecLang" android:layout_width="match_parent" android:layout_height="56dp"
+                android:orientation="horizontal" android:gravity="center_vertical" android:paddingHorizontal="20dp"
+                android:background="@color/surface_dark" android:layout_marginBottom="1dp"
+                android:foreground="?attr/selectableItemBackground">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                    android:text="@string/lang_audio" android:textColor="@color/text_primary" android:textSize="15sp"/>
+                <TextView android:id="@+id/tvRecLang" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:textColor="@color/text_secondary" android:textSize="14sp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text=" ›" android:textColor="@color/text_tertiary" android:textSize="18sp"/>
+            </LinearLayout>
+
+            <!-- Mic Sensitivity -->
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="🎚️ Kepekaan Mikrofon" android:textStyle="bold" android:textSize="12sp"
+                android:textColor="#8892B0" android:paddingHorizontal="20dp"
+                android:paddingTop="20dp" android:paddingBottom="4dp"/>
+
+            <androidx.cardview.widget.CardView android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginHorizontal="12dp"
+                android:layout_marginBottom="4dp"
+                xmlns:app2="http://schemas.android.com/apk/res-auto"
+                app2:cardCornerRadius="16dp" app2:cardElevation="0dp"
+                app2:cardBackgroundColor="@color/surface_dark">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="horizontal" android:layout_marginBottom="8dp">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:text="Rendah" android:textSize="11sp"
+                            android:textColor="#4A5568"/>
+                        <TextView android:id="@+id/tvSensitivityLevel"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Normal (3/5)" android:textSize="13sp" android:textStyle="bold"
+                            android:textColor="@color/primary_green"/>
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:text="Tinggi" android:textSize="11sp"
+                            android:textColor="#4A5568" android:gravity="end"/>
+                    </LinearLayout>
+                    <SeekBar android:id="@+id/seekMicSensitivity"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:max="4" android:progress="2"
+                        android:progressTint="@color/primary_green"
+                        android:thumbTint="@color/primary_green"
+                        android:layout_marginBottom="10dp"/>
+                    <TextView android:id="@+id/tvSensitivityDesc"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="Seimbang — cocok untuk bicara langsung ke HP"
+                        android:textSize="12sp" android:textColor="#8892B0" android:lineSpacingExtra="2dp"/>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_transcript" android:padding="12dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="📊 Panduan Level:" android:textColor="#8892B0"
+                            android:textSize="11sp" android:textStyle="bold" android:layout_marginBottom="4dp"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="1 — Hanya suara jelas dari dekat\n2 — Konservatif, presisi tinggi\n3 — Normal (default)\n4 — Speaker PA, mikrofon jauh\n5 — Maksimal, ruangan besar/bising"
+                            android:textColor="#555E77" android:textSize="11sp" android:lineSpacingExtra="3dp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <LinearLayout android:id="@+id/rowSpeakerSens" android:layout_width="match_parent" android:layout_height="56dp"
+                android:orientation="horizontal" android:gravity="center_vertical" android:paddingHorizontal="20dp"
+                android:background="@color/surface_dark" android:foreground="?attr/selectableItemBackground">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                    android:text="@string/speaker_sensitivity" android:textColor="@color/text_primary" android:textSize="15sp"/>
+                <TextView android:id="@+id/tvSpeakerSens" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:textColor="@color/text_secondary" android:textSize="14sp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text=" ›" android:textColor="@color/text_tertiary" android:textSize="18sp"/>
+            </LinearLayout>
+
+            <!-- ══ TRANSKRIPSI AI ════════════════════════════════════════ -->
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:layout_marginTop="12dp" android:background="#1AFFFFFF"/>
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="TRANSKRIPSI AI"
+                android:textColor="#556080" android:textSize="11sp" android:letterSpacing="0.12"
+                android:paddingHorizontal="20dp" android:paddingTop="16dp" android:paddingBottom="10dp"/>
+
+            <!-- Card Groq -->
+            <androidx.cardview.widget.CardView android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
+                android:layout_marginBottom="8dp"
+                xmlns:app3="http://schemas.android.com/apk/res-auto"
+                app3:cardCornerRadius="16dp"
+                app3:cardElevation="0dp"
+                app3:cardBackgroundColor="@color/surface_dark">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Engine selector -->
+                    <LinearLayout android:id="@+id/rowTranscribeEngine"
+                        android:layout_width="match_parent" android:layout_height="64dp"
+                        android:orientation="horizontal" android:gravity="center_vertical"
+                        android:paddingHorizontal="16dp"
+                        android:foreground="?attr/selectableItemBackground">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="Engine Transkripsi"
+                                android:textColor="@color/text_primary" android:textSize="15sp"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="Digunakan saat Mode Rekam selesai"
+                                android:textColor="@color/text_tertiary" android:textSize="12sp"/>
+                        </LinearLayout>
+                        <TextView android:id="@+id/tvTranscribeEngine"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:textColor="#64B5F6" android:textSize="14sp" android:textStyle="bold"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text=" ›" android:textColor="@color/text_tertiary" android:textSize="18sp"/>
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="1dp"
+                        android:layout_marginHorizontal="16dp" android:background="#15FFFFFF"/>
+
+                    <!-- Groq API Key -->
+                    <LinearLayout android:id="@+id/rowGroqApiKey"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="16dp" android:paddingTop="14dp" android:paddingBottom="14dp"
+                        android:foreground="?attr/selectableItemBackground">
+
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                            android:orientation="horizontal" android:gravity="center_vertical">
+                            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Groq API Key"
+                                android:textColor="@color/text_primary" android:textSize="15sp"/>
+                            <TextView android:id="@+id/tvGroqKeyStatus"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:textSize="13sp" android:textStyle="bold"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text=" ›" android:textColor="@color/text_tertiary" android:textSize="18sp"/>
+                        </LinearLayout>
+
+                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                            android:text="Tap untuk masukkan atau ubah API Key.\nDapatkan gratis di console.groq.com"
+                            android:textColor="@color/text_tertiary" android:textSize="12sp"
+                            android:lineSpacingExtra="2dp" android:paddingTop="4dp"/>
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="1dp"
+                        android:layout_marginHorizontal="16dp" android:background="#15FFFFFF"/>
+
+                    <!-- Info quota -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="horizontal" android:gravity="center_vertical"
+                        android:paddingHorizontal="16dp" android:paddingVertical="12dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="ℹ️  " android:textSize="14sp"/>
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Gratis · 20 request/menit · Model: whisper-large-v3-turbo\nRingkasan AI juga menggunakan key ini (llama-3.3-70b)"
+                            android:textColor="#556080" android:textSize="12sp"
+                            android:lineSpacingExtra="2dp"/>
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

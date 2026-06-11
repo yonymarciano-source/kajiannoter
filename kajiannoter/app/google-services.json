@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "466508064963",
+    "project_id": "kajiannote",
+    "storage_bucket": "kajiannote.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:466508064963:android:67fce30b8bec7de096da76",
+        "android_client_info": {
+          "package_name": "com.kajian.note"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "466508064963-0ngkj1r9glt19td60vjae2jnmm3pamk9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kajian.note",
+            "certificate_hash": "89a7f9e2ed79570c9e9723209dd40b68c15c12f3"
+          }
+        },
+        {
+          "client_id": "466508064963-sej1hrf9529rqpno291crf4vou1t0p14.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kajian.note",
+            "certificate_hash": "9c091f775b55a79dcfbe8b1803be6fe9f5389c92"
+          }
+        },
+        {
+          "client_id": "466508064963-6ng1t1p9j2r06243s0bliq8bcqqk9kit.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCEj8blxkoM-U5L_Iy5F6Yb1X8wVDotvJE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "466508064963-6ng1t1p9j2r06243s0bliq8bcqqk9kit.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

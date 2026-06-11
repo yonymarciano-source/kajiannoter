@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <application
+        android:name=".KajianApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.KajianNote">
+
+        <!-- v4.0: LoginActivity is now the launcher -->
+        <activity android:name=".ui.LoginActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.KajianNote.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".ui.SplashActivity"
+            android:exported="false"
+            android:theme="@style/Theme.KajianNote.Splash"
+            android:screenOrientation="portrait"/>
+
+        <activity android:name=".ui.onboarding.OnboardingActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"/>
+
+        <activity android:name=".ui.MainActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"/>
+
+        <activity android:name=".ui.NoteDetailActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"
+            android:parentActivityName=".ui.MainActivity" />
+
+        <activity android:name=".ui.AppSettingsActivity"
+            android:exported="false" />
+
+        <activity android:name=".ui.TranscribeActivity"
+            android:exported="false" />
+
+        <activity android:name=".ui.DictionaryActivity"
+            android:exported="false" />
+
+        <activity android:name=".ui.SummaryEditorActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- v4.0 New Activities -->
+        <activity android:name=".ui.PaywallActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity android:name=".ui.FolderManagerActivity"
+            android:exported="false" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_provider_paths" />
+        </provider>
+
+    </application>
+</manifest>
