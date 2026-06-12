@@ -130,7 +130,7 @@ object AssemblyAITranscriber {
         val bodyJson = JSONObject().apply {
             put("audio_url", audioUrl)
             put("speaker_labels", true)
-            put("speech_model", "best")          // ✅ Gunakan model terbaik untuk akurasi diarization
+            put("speech_models", org.json.JSONArray().put("universal-3-pro"))  // ✅ Model terbaik AssemblyAI untuk diarization
             put("disfluencies", false)            // ✅ Filter "eh", "um", "hmm" supaya tidak trigger speaker baru
             put("punctuate", true)
             put("format_text", true)
