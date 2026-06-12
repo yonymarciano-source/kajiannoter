@@ -1,6 +1,10 @@
 package com.kajian.note.ui
 
 import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
+import android.os.Build
+import com.kajian.note.service.RecordingService
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
@@ -38,6 +42,35 @@ class SpeakerFragment : Fragment() {
 
     // Recording
     private var audioRec: AudioRecordManager? = null
+
+    private val recordingReceiver = object : BroadcastReceiver() {
+        override fun onReceive(ctx: android.content.Context?, intent: android.content.Intent?) {
+            val state = intent?.getStringExtra(RecordingService.EXTRA_STATE) ?: return
+            val elapsed = intent.getLongExtra(RecordingService.EXTRA_ELAPSED_MS, 0L)
+            when (state) {
+                RecordingService.STATE_TICK -> {
+                    val mm = (elapsed / 60000).toString().padStart(2, '0')
+                    val ss = ((elapsed % 60000) / 1000).toString().padStart(2, '0')
+                    b.tvTimer.text = "$mm:$ss"
+                }
+                RecordingService.STATE_STOPPED -> {
+                    val audioPath = intent.getStringExtra(RecordingService.EXTRA_AUDIO_PATH) ?: ""
+                    if (audioPath.isNotBlank()) {
+                        val file = java.io.File(audioPath)
+                        if (file.exists() && file.length() > 44) {
+                            b.tvRecordStatus.text = "Memproses..."
+                            processAudio(file)
+                        } else {
+                            b.tvRecordStatus.text = "Gagal — file audio kosong"
+                        }
+                    }
+                    b.btnRecord.isEnabled = true
+                    isRecording = false
+                    stopTimer()
+                }
+            }
+        }
+    }
     private var isRecording = false
     private var recordingStartMs = 0L
     private var savedAudioPath = ""
@@ -228,9 +261,15 @@ class SpeakerFragment : Fragment() {
             "speaker_${System.currentTimeMillis()}.wav"
         )
 
-        audioRec = AudioRecordManager { /* amplitude callback unused */ }
-        val recFile = audioRec!!.start(requireContext().cacheDir)
-        savedAudioPath = recFile.absolutePath
+        // ✅ Start via ForegroundService (WakeLock + background safe)
+        val lang = when {
+            b.chipLangAr.isSelected -> "ar"
+            b.chipLangEn.isSelected -> "en"
+            b.chipLangAuto.isSelected -> "auto"
+            else -> "id"
+        }
+        RecordingService.startSpeaker(requireContext(), lang)
+        savedAudioPath = ""
 
         isRecording = true
         recordingStartMs = SystemClock.elapsedRealtime()
@@ -269,15 +308,10 @@ class SpeakerFragment : Fragment() {
         b.chipSpeaker4.isEnabled = true
 
         // Tunggu file selesai ditulis dulu, baru upload
-        audioRec?.stop { file ->
-            if (file != null && file.exists() && file.length() > 44) {
-                b.tvRecordStatus.text = "Memproses..."
-                processAudio(file)
-            } else {
-                b.tvRecordStatus.text = "Gagal — file audio kosong"
-                b.progressBar.visibility = android.view.View.GONE
-            }
-        }
+        // ✅ Delegate to service
+        b.btnRecord.isEnabled = false
+        b.tvRecordStatus.text = "Menyimpan rekaman..."
+        RecordingService.stop(requireContext())
     }
 
     private fun processAudio(file: File) {

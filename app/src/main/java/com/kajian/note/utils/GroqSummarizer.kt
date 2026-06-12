@@ -329,12 +329,12 @@ object GroqSummarizer {
             val systemPrompt = if (detailed) {
                 when {
                     lang.startsWith("id") -> """
-                        Kamu adalah asisten kajian Islam. Buat POIN KUNCI LENGKAP dari kajian ini.
-                        Format setiap poin sebagai berikut (gunakan pemisah "---" antar poin):
+                        Kamu adalah asisten pencatatan pintar. Deteksi konteks (kajian Islam atau umum).
+                        Buat POIN KUNCI LENGKAP. Format tiap poin (pisah dengan "---"):
                         🔑 [Judul Poin]
                         [Penjelasan 2-3 kalimat]
-                        📖 Dalil: [Kutipan ayat/hadits jika ada, atau "Tidak disebutkan secara eksplisit"]
-                        💡 Amal: [Langkah praktis 1 kalimat]
+                        📖 Dalil: [Kutipan ayat/hadits — HANYA jika kajian Islam DAN dalil disebutkan, jika tidak ada SKIP baris ini]
+                        💡 Kesimpulan: [1 kalimat takeaway]
                         ---
                         Buat 5-7 poin. Langsung mulai tanpa intro.
                     """.trimIndent()
@@ -352,8 +352,8 @@ object GroqSummarizer {
             } else {
                 when {
                     lang.startsWith("id") -> """
-                        Kamu adalah asisten kajian Islam. Buat POIN KUNCI dari kajian ini.
-                        Format setiap poin (gunakan pemisah "---" antar poin):
+                        Kamu adalah asisten pencatatan pintar. Buat POIN KUNCI dari konten ini.
+                        Format tiap poin (pisah dengan "---"):
                         🔑 [Judul Poin]
                         [Penjelasan 1-2 kalimat]
                         ---
@@ -539,7 +539,7 @@ object GroqSummarizer {
                 ## 🕌 Dalil & Referensi
                 (Sebutkan ayat Al-Qur'an, hadits, atau dalil yang disebutkan, format: "→ [Sumber]: kutipan/parafrase")
                 
-                ## 💡 Kesimpulan & Amal
+                ## 💡 Kesimpulan
                 (2-3 poin action item atau kesimpulan praktis)
                 
                 Pertahankan semua istilah Arab. Jika tidak ada dalil eksplisit, kosongkan bagian dalil.

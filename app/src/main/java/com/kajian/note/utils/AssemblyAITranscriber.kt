@@ -130,11 +130,21 @@ object AssemblyAITranscriber {
         val bodyJson = JSONObject().apply {
             put("audio_url", audioUrl)
             put("speaker_labels", true)
-            if (language != null) put("language_code", language)
-            else put("language_detection", true)  // AssemblyAI auto-detect
+            put("speech_model", "best")          // ✅ Gunakan model terbaik untuk akurasi diarization
+            put("disfluencies", false)            // ✅ Filter "eh", "um", "hmm" supaya tidak trigger speaker baru
             put("punctuate", true)
             put("format_text", true)
-            if (maxSpeakers > 0) put("speakers_expected", maxSpeakers)
+            if (language != null) {
+                put("language_code", language)
+            } else {
+                put("language_detection", true)   // AssemblyAI auto-detect 99 bahasa
+            }
+            if (maxSpeakers > 0) {
+                put("speakers_expected", maxSpeakers)  // User pilih 2/3/4
+            } else {
+                // ✅ Auto: beri batas atas yang reasonable, cegah over-segmentation
+                put("speakers_expected", 2)  // default 2 speaker untuk kajian (ustadz + jamaah)
+            }
         }
 
         val requestBody = bodyJson.toString()

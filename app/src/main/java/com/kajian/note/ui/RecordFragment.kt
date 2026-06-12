@@ -1,6 +1,10 @@
 package com.kajian.note.ui
 
 import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
+import android.os.Build
+import com.kajian.note.service.RecordingService
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.content.pm.PackageManager
@@ -33,6 +37,31 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
     private var _b: FragmentRecordBinding? = null
     private val b get() = _b!!
     private val vm: RecordViewModel by activityViewModels()
+
+    // Service broadcast receiver
+    private val recordingReceiver = object : BroadcastReceiver() {
+        override fun onReceive(ctx: android.content.Context?, intent: android.content.Intent?) {
+            val state = intent?.getStringExtra(RecordingService.EXTRA_STATE) ?: return
+            val elapsed = intent.getLongExtra(RecordingService.EXTRA_ELAPSED_MS, 0L)
+            when (state) {
+                RecordingService.STATE_TICK -> updateTimerFromService(elapsed)
+                RecordingService.STATE_CHUNK -> {
+                    val chunk = intent.getStringExtra(RecordingService.EXTRA_CHUNK_TEXT) ?: return
+                    appendedChunks.append(" ").append(chunk)
+                    val full = appendedChunks.toString().trim()
+                    b.etTranscript.setText(full)
+                    b.etTranscript.setSelection(full.length)
+                    b.tvPartial.text = "✅ Chunk: $chunk"
+                    vm.updateText(full)
+                }
+                RecordingService.STATE_STOPPED -> {
+                    val audioPath = intent.getStringExtra(RecordingService.EXTRA_AUDIO_PATH) ?: ""
+                    val fullText  = intent.getStringExtra(RecordingService.EXTRA_FULL_TEXT) ?: ""
+                    onServiceStopped(audioPath, fullText)
+                }
+            }
+        }
+    }
     private lateinit var prefs: PreferencesManager
 
     // Engines
@@ -246,8 +275,6 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
         appendedChunks.clear()
         vm.setRecording(true)
         startElapsed = SystemClock.elapsedRealtime()
-        timerRunning = true
-        handler.post(timerTick)
 
         b.fabRecord.setImageResource(R.drawable.ic_stop)
         b.fabRecord.backgroundTintList =
@@ -267,38 +294,21 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
                 useContinuousGroq = false
                 b.etTranscript.setText("🔴 Merekam audio...\nTranskripsi akan diproses setelah recording selesai.")
                 b.tvPartial.text = "🔴 Merekam..."
-                audioRec = AudioRecordManager { rms ->
-                    activity?.runOnUiThread { b.waveformView.setLevel(rms) }
-                }
-                audioRec?.start(requireContext().cacheDir)
+                // ✅ Start via ForegroundService
+                RecordingService.startRekam(requireContext(), lang)
             }
             hasGroqKey && savedMode != "STT" -> {
-                // Mode Langsung Groq
                 useContinuousGroq = true
                 b.tvPartial.text = "🎙️ Merekam... teks muncul tiap ~25 detik"
-                continuousRec = ContinuousGroqRecorder(
-                    ctx       = requireContext(),
-                    language  = lang,
-                    onPartial = { chunkText ->
-                        appendedChunks.append(" ").append(chunkText)
-                        val full = appendedChunks.toString().trim()
-                        activity?.runOnUiThread {
-                            b.etTranscript.setText(full)
-                            b.etTranscript.setSelection(full.length)
-                            b.tvPartial.text = "✅ Chunk terakhir: $chunkText"
-                            vm.updateText(full)
-                        }
-                    },
-                    onAmplitude = { rms ->
-                        activity?.runOnUiThread { b.waveformView.setLevel(rms) }
-                    }
-                )
-                continuousRec?.start(requireContext().cacheDir)
+                // ✅ Start via ForegroundService
+                RecordingService.startGroq(requireContext(), lang)
             }
             else -> {
-                // Mode Langsung STT (fallback)
+                // Mode STT — tidak pakai service (limitasi Google)
                 useContinuousGroq = false
                 speech?.start(lang)
+                timerRunning = true
+                handler.post(timerTick)
             }
         }
     }
@@ -312,52 +322,56 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
         b.fabRecord.setImageResource(R.drawable.ic_mic)
         b.fabRecord.backgroundTintList =
             resources.getColorStateList(R.color.primary_green, null)
-        b.tvStatus.text = getString(R.string.status_idle)
         b.waveformView.isVisible = false
         b.tvPartial.isVisible = false
 
-        val dur = System.currentTimeMillis() - recordingStartMs
         val savedMode = prefs.getRecordMode()
-
-        when {
-            savedMode != "REKAM" -> {
-                if (useContinuousGroq) {
-                    b.tvStatus.text = "⏳ Memproses sisa audio..."
-                    b.fabRecord.isEnabled = false
-                    continuousRec?.stop { fullText, audioFile ->
-                        savedAudioPath = audioFile?.absolutePath ?: ""
-                        val text = fullText.ifBlank { appendedChunks.toString().trim() }
-                        b.etTranscript.setText(text)
-                        b.etTranscript.setSelection(text.length)
-                        vm.updateText(text)
-                        b.tvStatus.text = getString(R.string.status_idle)
-                        b.fabRecord.isEnabled = true
-                        b.btnSave.isEnabled = text.isNotBlank()
-                        continuousRec = null
-                    }
-                } else {
-                    speech?.stop()
-                    b.btnSave.isEnabled = b.etTranscript.text?.isNotBlank() == true
-                }
-            }
-            else -> {
-                val lang2 = vm.language.value ?: LanguageDetector.detectDeviceLanguage(requireContext())
-                b.tvStatus.text = "Menyimpan rekaman..."
-                audioRec?.stop { wavFile ->
-                    audioRec?.destroy(); audioRec = null
-                    if (wavFile != null) {
-                        startActivity(android.content.Intent(requireContext(), TranscribeActivity::class.java).apply {
-                            putExtra(TranscribeActivity.EXTRA_WAV_PATH, wavFile.absolutePath)
-                            putExtra(TranscribeActivity.EXTRA_LANGUAGE, lang2)
-                            putExtra(TranscribeActivity.EXTRA_DURATION_MS, dur)
-                        })
-                    } else {
-                        b.tvStatus.text = getString(R.string.status_idle)
-                        Toast.makeText(requireContext(), "File rekaman tidak ditemukan", Toast.LENGTH_LONG).show()
-                    }
-                }
-            }
+        if (savedMode == "REKAM" || (savedMode != "STT" && useContinuousGroq)) {
+            // Delegate stop ke service
+            b.tvStatus.text = "⏳ Memproses rekaman..."
+            b.fabRecord.isEnabled = false
+            RecordingService.stop(requireContext())
+        } else {
+            // STT mode — stop langsung
+            speech?.stop()
+            b.tvStatus.text = getString(R.string.status_idle)
+            b.btnSave.isEnabled = b.etTranscript.text?.isNotBlank() == true
         }
+    }
+
+    private fun onServiceStopped(audioPath: String, fullText: String) {
+        b.fabRecord.isEnabled = true
+        b.tvStatus.text = getString(R.string.status_idle)
+        val savedMode = prefs.getRecordMode()
+        val dur = System.currentTimeMillis() - recordingStartMs
+
+        if (savedMode == "REKAM" && audioPath.isNotBlank()) {
+            val lang2 = vm.language.value ?: LanguageDetector.detectDeviceLanguage(requireContext())
+            val wavFile = java.io.File(audioPath)
+            if (wavFile.exists()) {
+                startActivity(android.content.Intent(requireContext(), TranscribeActivity::class.java).apply {
+                    putExtra(TranscribeActivity.EXTRA_WAV_PATH, audioPath)
+                    putExtra(TranscribeActivity.EXTRA_LANGUAGE, lang2)
+                    putExtra(TranscribeActivity.EXTRA_DURATION_MS, dur)
+                })
+            } else {
+                Toast.makeText(requireContext(), "File rekaman tidak ditemukan", Toast.LENGTH_LONG).show()
+            }
+        } else if (useContinuousGroq) {
+            val text = fullText.ifBlank { appendedChunks.toString().trim() }
+            if (text.isNotBlank()) {
+                b.etTranscript.setText(text)
+                b.etTranscript.setSelection(text.length)
+                vm.updateText(text)
+            }
+            b.btnSave.isEnabled = text.isNotBlank()
+        }
+    }
+
+    private fun updateTimerFromService(elapsedMs: Long) {
+        val mm = (elapsedMs / 60000).toString().padStart(2, '0')
+        val ss = ((elapsedMs % 60000) / 1000).toString().padStart(2, '0')
+        b.tvTimer.text = "$mm:$ss"
     }
 
     // ── Save / Clear ───────────────────────────────────────────────────────
@@ -536,6 +550,28 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
             LanguageDetector.detectDeviceLanguage(requireContext()) else savedLang
         speech?.currentLanguage = resolved
         vm.setLanguage(resolved)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val filter = IntentFilter(RecordingService.BROADCAST_STATE)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requireContext().registerReceiver(recordingReceiver, filter, android.content.Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            requireContext().registerReceiver(recordingReceiver, filter)
+        }
+        // Sync UI if service already running
+        if (RecordingService.isRunning && vm.isRecording.value != true) {
+            vm.setRecording(true)
+            b.fabRecord.setImageResource(R.drawable.ic_stop)
+            b.fabRecord.backgroundTintList = resources.getColorStateList(R.color.recording_red, null)
+            b.tvStatus.text = getString(R.string.status_recording)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        try { requireContext().unregisterReceiver(recordingReceiver) } catch (_: Exception) {}
     }
 
     override fun onDestroyView() {
