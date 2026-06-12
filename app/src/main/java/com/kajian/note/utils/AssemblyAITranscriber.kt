@@ -140,11 +140,11 @@ object AssemblyAITranscriber {
                 put("language_detection", true)   // AssemblyAI auto-detect 99 bahasa
             }
             if (maxSpeakers > 0) {
-                put("speakers_expected", maxSpeakers)  // User pilih 2/3/4
-            } else {
-                // ✅ Auto: beri batas atas yang reasonable, cegah over-segmentation
-                put("speakers_expected", 2)  // default 2 speaker untuk kajian (ustadz + jamaah)
+                // User pilih 2/3/4 — hint ke AssemblyAI
+                put("speakers_expected", maxSpeakers)
             }
+            // Auto (maxSpeakers == 0) → tidak set speakers_expected sama sekali
+            // Biarkan AssemblyAI deteksi jumlah speaker sendiri tanpa constraint
         }
 
         val requestBody = bodyJson.toString()
