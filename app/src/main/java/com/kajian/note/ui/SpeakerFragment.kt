@@ -43,31 +43,14 @@ class SpeakerFragment : Fragment() {
     // Recording
     private var audioRec: AudioRecordManager? = null
 
-    private val recordingReceiver = object : BroadcastReceiver() {
+    // Receiver hanya untuk update timer di notifikasi (tick dari service)
+    private val tickReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: android.content.Context?, intent: android.content.Intent?) {
-            val state = intent?.getStringExtra(RecordingService.EXTRA_STATE) ?: return
-            val elapsed = intent.getLongExtra(RecordingService.EXTRA_ELAPSED_MS, 0L)
-            when (state) {
-                RecordingService.STATE_TICK -> {
-                    val mm = (elapsed / 60000).toString().padStart(2, '0')
-                    val ss = ((elapsed % 60000) / 1000).toString().padStart(2, '0')
-                    b.tvTimer.text = "$mm:$ss"
-                }
-                RecordingService.STATE_STOPPED -> {
-                    val audioPath = intent.getStringExtra(RecordingService.EXTRA_AUDIO_PATH) ?: ""
-                    if (audioPath.isNotBlank()) {
-                        val file = java.io.File(audioPath)
-                        if (file.exists() && file.length() > 44) {
-                            b.tvRecordStatus.text = "Memproses..."
-                            processAudio(file)
-                        } else {
-                            b.tvRecordStatus.text = "Gagal — file audio kosong"
-                        }
-                    }
-                    b.btnRecord.isEnabled = true
-                    isRecording = false
-                    stopTimer()
-                }
+            val elapsed = intent?.getLongExtra(RecordingService.EXTRA_ELAPSED_MS, 0L) ?: return
+            if (isRecording) {
+                val mm = (elapsed / 60000).toString().padStart(2, '0')
+                val ss = ((elapsed % 60000) / 1000).toString().padStart(2, '0')
+                b.tvTimer.text = "$mm:$ss"
             }
         }
     }
@@ -256,20 +239,21 @@ class SpeakerFragment : Fragment() {
             return
         }
 
-        val outputFile = File(
-            requireContext().cacheDir,
-            "speaker_${System.currentTimeMillis()}.wav"
-        )
-
-        // ✅ Start via ForegroundService (WakeLock + background safe)
         val lang = when {
-            b.chipLangAr.isSelected -> "ar"
-            b.chipLangEn.isSelected -> "en"
+            b.chipLangAr.isSelected   -> "ar"
+            b.chipLangEn.isSelected   -> "en"
             b.chipLangAuto.isSelected -> "auto"
             else -> "id"
         }
-        RecordingService.startSpeaker(requireContext(), lang)
-        savedAudioPath = ""
+
+        // Fragment langsung pegang AudioRecordManager (tidak ada race condition)
+        audioRec = AudioRecordManager {}
+        val recFile = audioRec!!.start(requireContext().cacheDir)
+        savedAudioPath = recFile.absolutePath
+
+        // Service hanya untuk WakeLock + persistent notification
+        RecordingService.startSpeaker(requireContext())
+        
 
         isRecording = true
         recordingStartMs = SystemClock.elapsedRealtime()
@@ -308,10 +292,26 @@ class SpeakerFragment : Fragment() {
         b.chipSpeaker4.isEnabled = true
 
         // Tunggu file selesai ditulis dulu, baru upload
-        // ✅ Delegate to service
+        // Fragment stop audioRec langsung — tidak lewat service
         b.btnRecord.isEnabled = false
         b.tvRecordStatus.text = "Menyimpan rekaman..."
-        RecordingService.stop(requireContext())
+
+        audioRec?.stop { file ->
+            // Service stop (release WakeLock + dismiss notif)
+            RecordingService.stop(requireContext())
+            b.btnRecord.isEnabled = true
+
+            if (file != null && file.exists() && file.length() > 44) {
+                b.tvRecordStatus.text = "Memproses..."
+                processAudio(file)
+            } else {
+                b.tvRecordStatus.text = "Gagal — file audio kosong"
+                b.progressBar.visibility = android.view.View.GONE
+                b.btnRecord.isEnabled = true
+            }
+            audioRec?.destroy()
+            audioRec = null
+        }
     }
 
     private fun processAudio(file: File) {
@@ -458,10 +458,28 @@ class SpeakerFragment : Fragment() {
         handler.removeCallbacks(timerRunnable)
     }
 
+    override fun onResume() {
+        super.onResume()
+        try {
+            val filter = IntentFilter(RecordingService.BROADCAST_TICK)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                requireContext().registerReceiver(tickReceiver, filter, android.content.Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                requireContext().registerReceiver(tickReceiver, filter)
+            }
+        } catch (_: Exception) {}
+    }
+
+    override fun onPause() {
+        super.onPause()
+        try { requireContext().unregisterReceiver(tickReceiver) } catch (_: Exception) {}
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         stopTimer()
-        audioRec?.stop { }
+        // Jika recording masih jalan saat view destroyed, biarkan service tetap jaga WakeLock
+        // audioRec tetap jalan di background
         _b = null
     }
 }

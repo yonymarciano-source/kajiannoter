@@ -38,28 +38,11 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
     private val b get() = _b!!
     private val vm: RecordViewModel by activityViewModels()
 
-    // Service broadcast receiver
-    private val recordingReceiver = object : BroadcastReceiver() {
+    // Receiver hanya untuk timer tick dari service (untuk update UI saat background)
+    private val tickReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: android.content.Context?, intent: android.content.Intent?) {
-            val state = intent?.getStringExtra(RecordingService.EXTRA_STATE) ?: return
-            val elapsed = intent.getLongExtra(RecordingService.EXTRA_ELAPSED_MS, 0L)
-            when (state) {
-                RecordingService.STATE_TICK -> updateTimerFromService(elapsed)
-                RecordingService.STATE_CHUNK -> {
-                    val chunk = intent.getStringExtra(RecordingService.EXTRA_CHUNK_TEXT) ?: return
-                    appendedChunks.append(" ").append(chunk)
-                    val full = appendedChunks.toString().trim()
-                    b.etTranscript.setText(full)
-                    b.etTranscript.setSelection(full.length)
-                    b.tvPartial.text = "✅ Chunk: $chunk"
-                    vm.updateText(full)
-                }
-                RecordingService.STATE_STOPPED -> {
-                    val audioPath = intent.getStringExtra(RecordingService.EXTRA_AUDIO_PATH) ?: ""
-                    val fullText  = intent.getStringExtra(RecordingService.EXTRA_FULL_TEXT) ?: ""
-                    onServiceStopped(audioPath, fullText)
-                }
-            }
+            val elapsed = intent?.getLongExtra(RecordingService.EXTRA_ELAPSED_MS, 0L) ?: return
+            updateTimerFromService(elapsed)
         }
     }
     private lateinit var prefs: PreferencesManager
@@ -294,14 +277,38 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
                 useContinuousGroq = false
                 b.etTranscript.setText("🔴 Merekam audio...\nTranskripsi akan diproses setelah recording selesai.")
                 b.tvPartial.text = "🔴 Merekam..."
-                // ✅ Start via ForegroundService
-                RecordingService.startRekam(requireContext(), lang)
+                // Fragment pegang audioRec langsung
+                audioRec = AudioRecordManager { rms ->
+                    activity?.runOnUiThread { b.waveformView.setLevel(rms) }
+                }
+                audioRec?.start(requireContext().cacheDir)
+                // Service hanya WakeLock + notifikasi
+                RecordingService.startRekam(requireContext())
             }
             hasGroqKey && savedMode != "STT" -> {
                 useContinuousGroq = true
                 b.tvPartial.text = "🎙️ Merekam... teks muncul tiap ~25 detik"
-                // ✅ Start via ForegroundService
-                RecordingService.startGroq(requireContext(), lang)
+                // Fragment pegang continuousRec langsung
+                continuousRec = ContinuousGroqRecorder(
+                    ctx = requireContext(),
+                    language = lang,
+                    onPartial = { chunkText ->
+                        appendedChunks.append(" ").append(chunkText)
+                        val full = appendedChunks.toString().trim()
+                        activity?.runOnUiThread {
+                            b.etTranscript.setText(full)
+                            b.etTranscript.setSelection(full.length)
+                            b.tvPartial.text = "✅ Chunk: $chunkText"
+                            vm.updateText(full)
+                        }
+                    },
+                    onAmplitude = { rms ->
+                        activity?.runOnUiThread { b.waveformView.setLevel(rms) }
+                    }
+                )
+                continuousRec?.start(requireContext().cacheDir)
+                // Service hanya WakeLock + notifikasi
+                RecordingService.startGroq(requireContext())
             }
             else -> {
                 // Mode STT — tidak pakai service (limitasi Google)
@@ -325,46 +332,52 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
         b.waveformView.isVisible = false
         b.tvPartial.isVisible = false
 
-        val savedMode = prefs.getRecordMode()
-        if (savedMode == "REKAM" || (savedMode != "STT" && useContinuousGroq)) {
-            // Delegate stop ke service
-            b.tvStatus.text = "⏳ Memproses rekaman..."
-            b.fabRecord.isEnabled = false
-            RecordingService.stop(requireContext())
-        } else {
-            // STT mode — stop langsung
-            speech?.stop()
-            b.tvStatus.text = getString(R.string.status_idle)
-            b.btnSave.isEnabled = b.etTranscript.text?.isNotBlank() == true
-        }
-    }
-
-    private fun onServiceStopped(audioPath: String, fullText: String) {
-        b.fabRecord.isEnabled = true
-        b.tvStatus.text = getString(R.string.status_idle)
-        val savedMode = prefs.getRecordMode()
         val dur = System.currentTimeMillis() - recordingStartMs
+        val savedMode = prefs.getRecordMode()
+        val lang2 = vm.language.value ?: LanguageDetector.detectDeviceLanguage(requireContext())
 
-        if (savedMode == "REKAM" && audioPath.isNotBlank()) {
-            val lang2 = vm.language.value ?: LanguageDetector.detectDeviceLanguage(requireContext())
-            val wavFile = java.io.File(audioPath)
-            if (wavFile.exists()) {
-                startActivity(android.content.Intent(requireContext(), TranscribeActivity::class.java).apply {
-                    putExtra(TranscribeActivity.EXTRA_WAV_PATH, audioPath)
-                    putExtra(TranscribeActivity.EXTRA_LANGUAGE, lang2)
-                    putExtra(TranscribeActivity.EXTRA_DURATION_MS, dur)
-                })
-            } else {
-                Toast.makeText(requireContext(), "File rekaman tidak ditemukan", Toast.LENGTH_LONG).show()
+        // Stop service (release WakeLock + dismiss notif)
+        RecordingService.stop(requireContext())
+
+        when {
+            savedMode == "REKAM" -> {
+                b.tvStatus.text = "Menyimpan rekaman..."
+                b.fabRecord.isEnabled = false
+                audioRec?.stop { wavFile ->
+                    audioRec?.destroy(); audioRec = null
+                    b.fabRecord.isEnabled = true
+                    if (wavFile != null) {
+                        startActivity(android.content.Intent(requireContext(), TranscribeActivity::class.java).apply {
+                            putExtra(TranscribeActivity.EXTRA_WAV_PATH, wavFile.absolutePath)
+                            putExtra(TranscribeActivity.EXTRA_LANGUAGE, lang2)
+                            putExtra(TranscribeActivity.EXTRA_DURATION_MS, dur)
+                        })
+                    } else {
+                        b.tvStatus.text = getString(R.string.status_idle)
+                        Toast.makeText(requireContext(), "File rekaman tidak ditemukan", Toast.LENGTH_LONG).show()
+                    }
+                }
             }
-        } else if (useContinuousGroq) {
-            val text = fullText.ifBlank { appendedChunks.toString().trim() }
-            if (text.isNotBlank()) {
-                b.etTranscript.setText(text)
-                b.etTranscript.setSelection(text.length)
-                vm.updateText(text)
+            useContinuousGroq -> {
+                b.tvStatus.text = "⏳ Memproses sisa audio..."
+                b.fabRecord.isEnabled = false
+                continuousRec?.stop { fullText, audioFile ->
+                    b.fabRecord.isEnabled = true
+                    val text = fullText.ifBlank { appendedChunks.toString().trim() }
+                    b.etTranscript.setText(text)
+                    b.etTranscript.setSelection(text.length)
+                    vm.updateText(text)
+                    b.tvStatus.text = getString(R.string.status_idle)
+                    b.btnSave.isEnabled = text.isNotBlank()
+                    continuousRec = null
+                }
             }
-            b.btnSave.isEnabled = text.isNotBlank()
+            else -> {
+                // STT mode
+                speech?.stop()
+                b.tvStatus.text = getString(R.string.status_idle)
+                b.btnSave.isEnabled = b.etTranscript.text?.isNotBlank() == true
+            }
         }
     }
 
@@ -551,14 +564,16 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
         speech?.currentLanguage = resolved
         vm.setLanguage(resolved)
 
-        // Register service broadcast receiver
-        val filter = IntentFilter(RecordingService.BROADCAST_STATE)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requireContext().registerReceiver(recordingReceiver, filter, android.content.Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            requireContext().registerReceiver(recordingReceiver, filter)
-        }
-        // Sync UI if service already running (misal user kembali dari app lain)
+        // Register tick receiver untuk update timer
+        try {
+            val filter = IntentFilter(RecordingService.BROADCAST_TICK)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requireContext().registerReceiver(tickReceiver, filter, android.content.Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                requireContext().registerReceiver(tickReceiver, filter)
+            }
+        } catch (_: Exception) {}
+        // Sync UI jika service masih running (user kembali dari background)
         if (RecordingService.isRunning && vm.isRecording.value != true) {
             vm.setRecording(true)
             b.fabRecord.setImageResource(R.drawable.ic_stop)
@@ -569,7 +584,7 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
 
     override fun onPause() {
         super.onPause()
-        try { requireContext().unregisterReceiver(recordingReceiver) } catch (_: Exception) {}
+        try { requireContext().unregisterReceiver(tickReceiver) } catch (_: Exception) {}
     }
 
     override fun onDestroyView() {

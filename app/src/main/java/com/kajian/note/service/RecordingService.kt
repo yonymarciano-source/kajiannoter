@@ -8,64 +8,54 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.kajian.note.R
 import com.kajian.note.ui.MainActivity
-import com.kajian.note.utils.AudioRecordManager
-import com.kajian.note.utils.ContinuousGroqRecorder
 import kotlinx.coroutines.*
-import java.io.File
 
 /**
- * RecordingService — ForegroundService untuk semua mode recording.
- * Menjaga recording tetap hidup saat layar off / app di-background.
+ * RecordingService — ForegroundService RINGAN.
+ * Tugasnya HANYA: WakeLock + Persistent Notification + Timer broadcast.
+ * AudioRecordManager & ContinuousGroqRecorder tetap di Fragment (tidak ada race condition).
  */
 class RecordingService : Service() {
 
     companion object {
-        private const val TAG           = "RecordingService"
-        private const val CHANNEL_ID    = "kajian_recording"
-        private const val NOTIF_ID      = 1001
+        private const val TAG        = "RecordingService"
+        private const val CHANNEL_ID = "kajian_recording"
+        private const val NOTIF_ID   = 1001
 
-        const val ACTION_START_REKAM    = "START_REKAM"
-        const val ACTION_START_GROQ     = "START_GROQ"
-        const val ACTION_START_SPEAKER  = "START_SPEAKER"
-        const val ACTION_STOP           = "STOP_RECORDING"
+        // Actions
+        const val ACTION_START_REKAM   = "START_REKAM"
+        const val ACTION_START_GROQ    = "START_GROQ"
+        const val ACTION_START_SPEAKER = "START_SPEAKER"
+        const val ACTION_STOP          = "STOP_RECORDING"
 
-        const val EXTRA_LANGUAGE        = "language"
-        const val EXTRA_CACHE_DIR       = "cache_dir"
+        // Extras
+        const val EXTRA_MODE           = "mode"
 
-        const val BROADCAST_STATE       = "com.kajian.note.RECORDING_STATE"
-        const val EXTRA_STATE           = "state"
-        const val EXTRA_ELAPSED_MS      = "elapsed_ms"
-        const val EXTRA_CHUNK_TEXT      = "chunk_text"
-        const val EXTRA_AUDIO_PATH      = "audio_path"
-        const val EXTRA_FULL_TEXT       = "full_text"
-
-        const val STATE_STARTED         = "STARTED"
-        const val STATE_TICK            = "TICK"
-        const val STATE_CHUNK           = "CHUNK"
-        const val STATE_STOPPED         = "STOPPED"
+        // Timer broadcast (hanya untuk UI sync)
+        const val BROADCAST_TICK       = "com.kajian.note.RECORDING_TICK"
+        const val EXTRA_ELAPSED_MS     = "elapsed_ms"
 
         @Volatile var isRunning = false
             private set
+        @Volatile var currentMode = ""
+            private set
 
-        fun startRekam(ctx: Context, language: String) =
+        fun startRekam(ctx: Context) =
             ctx.startForegroundService(Intent(ctx, RecordingService::class.java).apply {
                 action = ACTION_START_REKAM
-                putExtra(EXTRA_LANGUAGE, language)
-                putExtra(EXTRA_CACHE_DIR, ctx.cacheDir.absolutePath)
+                putExtra(EXTRA_MODE, ACTION_START_REKAM)
             })
 
-        fun startGroq(ctx: Context, language: String) =
+        fun startGroq(ctx: Context) =
             ctx.startForegroundService(Intent(ctx, RecordingService::class.java).apply {
-                action = ACTION_START_GROQ
-                putExtra(EXTRA_LANGUAGE, language)
-                putExtra(EXTRA_CACHE_DIR, ctx.cacheDir.absolutePath)
+                action = ACTION_START_REKAM
+                putExtra(EXTRA_MODE, ACTION_START_GROQ)
             })
 
-        fun startSpeaker(ctx: Context, language: String) =
+        fun startSpeaker(ctx: Context) =
             ctx.startForegroundService(Intent(ctx, RecordingService::class.java).apply {
-                action = ACTION_START_SPEAKER
-                putExtra(EXTRA_LANGUAGE, language)
-                putExtra(EXTRA_CACHE_DIR, ctx.cacheDir.absolutePath)
+                action = ACTION_START_REKAM
+                putExtra(EXTRA_MODE, ACTION_START_SPEAKER)
             })
 
         fun stop(ctx: Context) =
@@ -75,134 +65,59 @@ class RecordingService : Service() {
     }
 
     private var wakeLock: PowerManager.WakeLock? = null
-    private var audioRec: AudioRecordManager? = null
-    private var continuousRec: ContinuousGroqRecorder? = null
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var timerJob: Job? = null
     private var startTimeMs = 0L
-    private var currentMode = ""
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
         acquireWakeLock()
         isRunning = true
+        Log.d(TAG, "Service created")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val lang      = intent?.getStringExtra(EXTRA_LANGUAGE) ?: "id"
-        val cachePath = intent?.getStringExtra(EXTRA_CACHE_DIR) ?: cacheDir.absolutePath
-        val cacheDir  = File(cachePath)
+        val mode = intent?.getStringExtra(EXTRA_MODE) ?: intent?.action ?: ACTION_START_REKAM
+        currentMode = mode
 
         when (intent?.action) {
-            ACTION_START_REKAM -> {
-                currentMode = ACTION_START_REKAM
-                startForegroundNotification("🔴 Merekam audio...")
-                startRekamMode(cacheDir)
+            ACTION_START_REKAM, ACTION_START_GROQ, ACTION_START_SPEAKER -> {
+                startTimeMs = System.currentTimeMillis()
+                val title = when (mode) {
+                    ACTION_START_GROQ    -> "⚡ Merekam (Groq)..."
+                    ACTION_START_SPEAKER -> "👥 Multi Speaker merekam..."
+                    else                 -> "🔴 Merekam audio..."
+                }
+                startForeground(NOTIF_ID, buildNotif(title, "Rekaman aman meski layar off"))
+                startTimer()
+                Log.d(TAG, "Recording started, mode=$mode")
             }
-            ACTION_START_GROQ -> {
-                currentMode = ACTION_START_GROQ
-                startForegroundNotification("⚡ Merekam (Groq)...")
-                startGroqMode(lang, cacheDir)
+            ACTION_STOP -> {
+                Log.d(TAG, "Service stop requested")
+                stopSelf()
             }
-            ACTION_START_SPEAKER -> {
-                currentMode = ACTION_START_SPEAKER
-                startForegroundNotification("👥 Multi Speaker merekam...")
-                startSpeakerMode(cacheDir)
-            }
-            ACTION_STOP -> stopRecordingAndBroadcast()
         }
-        return START_STICKY
+        return START_NOT_STICKY  // Jangan restart otomatis — fragment yang kontrol lifecycle
     }
 
-    // ── Modes ─────────────────────────────────────────────────────────────────
-
-    private fun startRekamMode(cacheDir: File) {
-        startTimeMs = System.currentTimeMillis()
-        audioRec = AudioRecordManager {}
-        audioRec!!.start(cacheDir)
-        startTimer()
-        broadcast(STATE_STARTED)
-    }
-
-    private fun startGroqMode(language: String, cacheDir: File) {
-        startTimeMs = System.currentTimeMillis()
-        continuousRec = ContinuousGroqRecorder(
-            ctx         = applicationContext,
-            language    = language,
-            onPartial   = { chunk -> broadcast(STATE_CHUNK, chunkText = chunk) },
-            onAmplitude = {}
-        )
-        continuousRec!!.start(cacheDir)
-        startTimer()
-        broadcast(STATE_STARTED)
-    }
-
-    private fun startSpeakerMode(cacheDir: File) {
-        startTimeMs = System.currentTimeMillis()
-        audioRec = AudioRecordManager {}
-        audioRec!!.start(cacheDir)
-        startTimer()
-        broadcast(STATE_STARTED)
-    }
-
-    private fun stopRecordingAndBroadcast() {
-        timerJob?.cancel()
-        when (currentMode) {
-            ACTION_START_GROQ -> {
-                continuousRec?.stop { fullText, audioFile ->
-                    broadcast(STATE_STOPPED, audioPath = audioFile?.absolutePath ?: "", fullText = fullText)
-                    continuousRec = null
-                    stopSelf()
-                } ?: stopSelf()
-            }
-            ACTION_START_REKAM, ACTION_START_SPEAKER -> {
-                audioRec?.stop { file ->
-                    broadcast(STATE_STOPPED, audioPath = file?.absolutePath ?: "")
-                    audioRec?.destroy(); audioRec = null
-                    stopSelf()
-                } ?: stopSelf()
-            }
-            else -> stopSelf()
-        }
-    }
-
-    // ── Timer ─────────────────────────────────────────────────────────────────
+    // ── Timer broadcast ───────────────────────────────────────────────────────
 
     private fun startTimer() {
+        timerJob?.cancel()
         timerJob = scope.launch {
             while (isActive) {
                 val elapsed = System.currentTimeMillis() - startTimeMs
                 updateNotificationTimer(elapsed)
-                broadcast(STATE_TICK, elapsedMs = elapsed)
+                sendBroadcast(Intent(BROADCAST_TICK).apply {
+                    putExtra(EXTRA_ELAPSED_MS, elapsed)
+                })
                 delay(1000)
             }
         }
     }
 
-    // ── Broadcast ─────────────────────────────────────────────────────────────
-
-    private fun broadcast(
-        state: String,
-        chunkText: String = "",
-        audioPath: String = "",
-        fullText: String  = "",
-        elapsedMs: Long   = System.currentTimeMillis() - startTimeMs
-    ) {
-        sendBroadcast(Intent(BROADCAST_STATE).apply {
-            putExtra(EXTRA_STATE,      state)
-            putExtra(EXTRA_CHUNK_TEXT, chunkText)
-            putExtra(EXTRA_AUDIO_PATH, audioPath)
-            putExtra(EXTRA_FULL_TEXT,  fullText)
-            putExtra(EXTRA_ELAPSED_MS, elapsedMs)
-        })
-    }
-
-    // ── Notification ─────────────────────────────────────────────────────────
-
-    private fun startForegroundNotification(title: String) {
-        startForeground(NOTIF_ID, buildNotif(title, "Rekaman aman meski layar off"))
-    }
+    // ── Notification ──────────────────────────────────────────────────────────
 
     private fun updateNotificationTimer(elapsedMs: Long) {
         val mm = (elapsedMs / 60000).toString().padStart(2, '0')
@@ -217,16 +132,16 @@ class RecordingService : Service() {
     }
 
     private fun buildNotif(title: String, text: String): Notification {
-        val stopPi = PendingIntent.getService(
-            this, 0,
-            Intent(this, RecordingService::class.java).apply { action = ACTION_STOP },
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
         val openPi = PendingIntent.getActivity(
             this, 0,
             Intent(this, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
             },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val stopPi = PendingIntent.getService(
+            this, 1,
+            Intent(this, RecordingService::class.java).apply { action = ACTION_STOP },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
@@ -243,8 +158,7 @@ class RecordingService : Service() {
 
     private fun createNotificationChannel() {
         val ch = NotificationChannel(
-            CHANNEL_ID,
-            "KajianNote Recording",
+            CHANNEL_ID, "KajianNote Recording",
             NotificationManager.IMPORTANCE_LOW
         ).apply {
             description = "Notifikasi aktif saat merekam kajian"
@@ -259,15 +173,18 @@ class RecordingService : Service() {
     private fun acquireWakeLock() {
         wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager)
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "KajianNote::RecordWakeLock")
-            .apply { acquire(4 * 60 * 60 * 1000L) } // max 4 jam
+            .apply { acquire(4 * 60 * 60 * 1000L) }
+        Log.d(TAG, "WakeLock acquired")
     }
 
     override fun onDestroy() {
         super.onDestroy()
         isRunning = false
+        currentMode = ""
         timerJob?.cancel()
         scope.cancel()
         try { wakeLock?.release() } catch (_: Exception) {}
+        Log.d(TAG, "Service destroyed, WakeLock released")
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
