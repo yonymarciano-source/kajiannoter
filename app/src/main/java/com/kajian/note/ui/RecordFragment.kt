@@ -550,17 +550,15 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
             LanguageDetector.detectDeviceLanguage(requireContext()) else savedLang
         speech?.currentLanguage = resolved
         vm.setLanguage(resolved)
-    }
 
-    override fun onResume() {
-        super.onResume()
+        // Register service broadcast receiver
         val filter = IntentFilter(RecordingService.BROADCAST_STATE)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requireContext().registerReceiver(recordingReceiver, filter, android.content.Context.RECEIVER_NOT_EXPORTED)
         } else {
             requireContext().registerReceiver(recordingReceiver, filter)
         }
-        // Sync UI if service already running
+        // Sync UI if service already running (misal user kembali dari app lain)
         if (RecordingService.isRunning && vm.isRecording.value != true) {
             vm.setRecording(true)
             b.fabRecord.setImageResource(R.drawable.ic_stop)
