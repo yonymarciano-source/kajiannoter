@@ -271,14 +271,8 @@ class TranscribeActivity : AppCompatActivity() {
             audioPath        = ""   // akan diupdate setelah insert
         ))
 
-        // Simpan audio ke storage permanen, update note dengan path-nya
-        if (wavFile != null && wavFile.exists()) {
-            val savedPath = com.kajian.note.utils.AudioStorage.saveAudio(this, wavFile, noteId)
-            if (savedPath.isNotBlank()) {
-                val saved = repo.getById(noteId)
-                if (saved != null) repo.update(saved.copy(audioPath = savedPath))
-            }
-        }
+        // Hapus WAV setelah transkripsi berhasil disimpan (Opsi B — no audio storage)
+        try { wavFile?.delete() } catch (_: Exception) {}
 
         runOnUiThread {
             startActivity(android.content.Intent(this, NoteDetailActivity::class.java).apply {

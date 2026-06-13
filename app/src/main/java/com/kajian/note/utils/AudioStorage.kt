@@ -17,20 +17,21 @@ object AudioStorage {
     }
 
     /**
-     * Pindah file audio dari cache ke storage permanen.
-     * Return path baru, atau string kosong jika gagal.
+     * DEPRECATED (Opsi B) — audio tidak disimpan permanen.
+     * Langsung hapus temp file.
      */
     fun saveAudio(ctx: Context, tempFile: File, noteId: Long): String {
-        return try {
-            val dir  = getAudioDir(ctx)
-            val dest = File(dir, "kajian_${noteId}.wav")
-            tempFile.copyTo(dest, overwrite = true)
-            tempFile.delete()
-            dest.absolutePath
-        } catch (e: Exception) {
-            android.util.Log.e("AudioStorage", "Save error: ${e.message}", e)
-            ""
-        }
+        try { tempFile.delete() } catch (_: Exception) {}
+        return ""
+    }
+
+    /**
+     * Hapus semua audio lama yang tersimpan (migrasi dari Opsi A ke B).
+     */
+    fun cleanupAllAudio(ctx: Context) {
+        try {
+            getAudioDir(ctx).listFiles()?.forEach { it.delete() }
+        } catch (_: Exception) {}
     }
 
     /**
