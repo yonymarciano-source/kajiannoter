@@ -4,6 +4,9 @@ import android.annotation.SuppressLint
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.media.audiofx.AcousticEchoCanceler
+import android.media.audiofx.AutomaticGainControl
+import android.media.audiofx.NoiseSuppressor
 import android.util.Log
 import kotlinx.coroutines.*
 import java.io.*
@@ -41,9 +44,27 @@ class AudioRecordManager(private val onAmplitude: (Float) -> Unit) {
             AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNELS, ENCODING) * 2, 8192
         )
         audioRecord = AudioRecord(
-            MediaRecorder.AudioSource.VOICE_RECOGNITION,
+            MediaRecorder.AudioSource.VOICE_COMMUNICATION,  // ✅ Built-in noise suppression + echo cancel
             SAMPLE_RATE, CHANNELS, ENCODING, bufferSize
         )
+
+        // ✅ Level A: Aktifkan audio effects Android built-in
+        val sessionId = audioRecord?.audioSessionId ?: AudioRecord.ERROR
+        if (sessionId != AudioRecord.ERROR) {
+            // Noise Suppressor — kurangi background noise (AC, kipas, keramaian)
+            if (NoiseSuppressor.isAvailable()) {
+                try { NoiseSuppressor.create(sessionId)?.enabled = true } catch (_: Exception) {}
+            }
+            // Automatic Gain Control — normalize volume supaya suara jauh tetap terbaca
+            if (AutomaticGainControl.isAvailable()) {
+                try { AutomaticGainControl.create(sessionId)?.enabled = true } catch (_: Exception) {}
+            }
+            // Acoustic Echo Canceler — hindari feedback loop
+            if (AcousticEchoCanceler.isAvailable()) {
+                try { AcousticEchoCanceler.create(sessionId)?.enabled = true } catch (_: Exception) {}
+            }
+        }
+
         isRecording = true
         audioRecord?.startRecording()
 

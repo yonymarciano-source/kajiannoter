@@ -277,18 +277,18 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
                 useContinuousGroq = false
                 b.etTranscript.setText("🔴 Merekam audio...\nTranskripsi akan diproses setelah recording selesai.")
                 b.tvPartial.text = "🔴 Merekam..."
-                // Fragment pegang audioRec langsung
                 audioRec = AudioRecordManager { rms ->
                     activity?.runOnUiThread { b.waveformView.setLevel(rms) }
                 }
                 audioRec?.start(requireContext().cacheDir)
-                // Service hanya WakeLock + notifikasi
                 RecordingService.startRekam(requireContext())
+                // ✅ Start timer
+                timerRunning = true
+                handler.post(timerTick)
             }
             hasGroqKey && savedMode != "STT" -> {
                 useContinuousGroq = true
                 b.tvPartial.text = "🎙️ Merekam... teks muncul tiap ~25 detik"
-                // Fragment pegang continuousRec langsung
                 continuousRec = ContinuousGroqRecorder(
                     ctx = requireContext(),
                     language = lang,
@@ -307,8 +307,10 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
                     }
                 )
                 continuousRec?.start(requireContext().cacheDir)
-                // Service hanya WakeLock + notifikasi
                 RecordingService.startGroq(requireContext())
+                // ✅ Start timer
+                timerRunning = true
+                handler.post(timerTick)
             }
             else -> {
                 // Mode STT — tidak pakai service (limitasi Google)
