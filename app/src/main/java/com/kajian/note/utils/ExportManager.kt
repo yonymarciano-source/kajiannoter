@@ -472,7 +472,7 @@ object ExportManager {
             if (text.isBlank()) return
             val words = text.split(" "); val sb = StringBuilder()
             for (word in words) {
-                val test = if (sb.isEmpty()) word else "${"$"}sb $word"
+                val test = if (sb.isEmpty()) word else "$sb $word"
                 if (paint.measureText(test) > maxW) {
                     checkBreak(paint.textSize + 4f)
                     canvas.drawText(sb.toString(), x, y, paint); y += paint.textSize + 4f
@@ -488,7 +488,7 @@ object ExportManager {
         drawBg(); canvas.drawRect(0f, 0f, 6f, pageHeight.toFloat(), paintAccent)
         canvas.drawText("KajianNote", margin, y, paintSmall); y += 20f
         drawWrapped(note.title.ifBlank { "Catatan Kajian" }, paintTitle, margin, pageWidth - margin * 2); y += 6f
-        canvas.drawText("${"$"}{note.getFormattedDate()}  ·  ${"$"}{note.getLanguageLabel()}  ·  ${"$"}{note.wordCount} kata", margin, y, paintMeta); y += 20f
+        canvas.drawText("${note.getFormattedDate()}  ·  ${note.getLanguageLabel()}  ·  ${note.wordCount} kata", margin, y, paintMeta); y += 20f
         canvas.drawRect(margin, y, pageWidth - margin, y + 1f, paintAccent); y += 16f
 
         checkBreak(24f); canvas.drawText(sectionTitle, margin, y, paintHead); y += 16f
@@ -518,7 +518,7 @@ object ExportManager {
         }
 
         val footerY = pageHeight - margin + 10f
-        canvas.drawText("Diekspor dari KajianNote  ·  ${"$"}{note.getFormattedDate()}", margin, footerY, paintSmall)
+        canvas.drawText("Diekspor dari KajianNote  ·  ${note.getFormattedDate()}", margin, footerY, paintSmall)
         doc.finishPage(page)
         FileOutputStream(outFile).use { doc.writeTo(it) }; doc.close()
     }
@@ -551,7 +551,7 @@ object ExportManager {
   <w:body>
 """)
         sb.append(para(note.title.ifBlank { "Catatan Kajian" }, bold = true, size = 36))
-        sb.append(para("${"$"}{note.getFormattedDate()}  ·  ${"$"}{note.wordCount} kata", size = 20, color = "888888"))
+        sb.append(para("${note.getFormattedDate()}  ·  ${note.wordCount} kata", size = 20, color = "888888"))
         sb.append(para(""))
         sb.append(para(sectionTitle, bold = true, size = 24, color = "1A7A40"))
 
@@ -570,7 +570,7 @@ object ExportManager {
         }
 
         sb.append(para(""))
-        sb.append(para("Diekspor dari KajianNote  ·  ${"$"}{note.getFormattedDate()}", size = 18, color = "888888"))
+        sb.append(para("Diekspor dari KajianNote  ·  ${note.getFormattedDate()}", size = 18, color = "888888"))
         sb.append("""
   </w:body>
 </w:document>""")
