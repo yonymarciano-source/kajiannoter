@@ -385,13 +385,13 @@ object ExportManager {
         if (text.isBlank()) return emptyList()
 
         // Mode Multi Speaker: ada [Speaker X]: → pisah per speaker
-        if (text.contains(Regex("\[Speaker \d+\]:|\[speaker \d+\]:"))) {
-            return text.split(Regex("(?=\[Speaker \d+\]:)|(?=\[speaker \d+\]:)"))
+        if (text.contains(Regex("\\[Speaker \\d+\\]:|\\[speaker \\d+\\]:"))) {
+            return text.split(Regex("(?=\\[Speaker \\d+\\]:)|(?=\\[speaker \\d+\\]:)"))
                 .map { it.trim() }.filter { it.isNotBlank() }
         }
 
         // Mode Record biasa: pecah per ~3-4 kalimat (tanda titik/tanya/seru)
-        val sentences = text.split(Regex("(?<=[.!?])\s+"))
+        val sentences = text.split(Regex("(?<=[.!?])\\s+"))
         val paragraphs = mutableListOf<String>()
         val sb = StringBuilder()
         var count = 0
