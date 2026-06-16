@@ -522,22 +522,7 @@ class NoteDetailActivity : AppCompatActivity() {
                             }
                         }
                         progress.dismiss()
-                        if (files.isNotEmpty()) {
-                            val uris = files.map { ExportManager.getFileUri(this@NoteDetailActivity, it) }
-                            val intent = if (uris.size == 1) {
-                                android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                                    type = "*/*"; putExtra(android.content.Intent.EXTRA_STREAM, uris[0])
-                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                }
-                            } else {
-                                android.content.Intent(android.content.Intent.ACTION_SEND_MULTIPLE).apply {
-                                    type = "*/*"
-                                    putParcelableArrayListExtra(android.content.Intent.EXTRA_STREAM, ArrayList(uris))
-                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                }
-                            }
-                            startActivity(android.content.Intent.createChooser(intent, "Bagikan Terjemahan"))
-                        }
+                        if (files.isNotEmpty()) showExportSuccess(files, false)
                     } catch (e: Exception) {
                         progress.dismiss()
                         Toast.makeText(this@NoteDetailActivity, "❌ Gagal: ${e.message}", Toast.LENGTH_LONG).show()
@@ -675,22 +660,7 @@ class NoteDetailActivity : AppCompatActivity() {
                             }
                         }
                         progress.dismiss()
-                        if (files.isNotEmpty()) {
-                            val uris = files.map { ExportManager.getFileUri(this@NoteDetailActivity, it) }
-                            val intent = if (uris.size == 1) {
-                                android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                                    type = "*/*"; putExtra(android.content.Intent.EXTRA_STREAM, uris[0])
-                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                }
-                            } else {
-                                android.content.Intent(android.content.Intent.ACTION_SEND_MULTIPLE).apply {
-                                    type = "*/*"
-                                    putParcelableArrayListExtra(android.content.Intent.EXTRA_STREAM, ArrayList(uris))
-                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                }
-                            }
-                            startActivity(android.content.Intent.createChooser(intent, "Bagikan Poin Kunci"))
-                        }
+                        if (files.isNotEmpty()) showExportSuccess(files, false)
                     } catch (e: Exception) {
                         progress.dismiss()
                         Toast.makeText(this@NoteDetailActivity, "❌ Gagal: ${e.message}", Toast.LENGTH_LONG).show()
