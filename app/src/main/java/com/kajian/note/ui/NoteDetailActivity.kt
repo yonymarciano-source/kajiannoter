@@ -496,6 +496,55 @@ class NoteDetailActivity : AppCompatActivity() {
         b.tvTranslateContent.text = text
         b.btnTranslate.isVisible = true
         b.btnTranslate.text = "↻ Terjemahkan Ulang"
+        // Show export button
+        b.btnExportTranslate.isVisible = true
+        b.btnExportTranslate.setOnClickListener { showExportTranslateDialog(text) }
+    }
+
+    private fun showExportTranslateDialog(text: String) {
+        val n = note ?: return
+        val options = arrayOf("📄 PDF saja", "📝 Word (DOCX) saja", "📦 PDF + DOCX (keduanya)")
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Export Terjemahan")
+            .setItems(options) { _, which ->
+                val progress = MaterialAlertDialogBuilder(this)
+                    .setMessage("⏳ Menyiapkan file...").setCancelable(false).create()
+                progress.show()
+                lifecycleScope.launch {
+                    val files = mutableListOf<java.io.File>()
+                    try {
+                        when (which) {
+                            0 -> ExportManager.exportTranslatePdf(this@NoteDetailActivity, n, text, translateLang).onSuccess { files.add(it) }
+                            1 -> ExportManager.exportTranslateDocx(this@NoteDetailActivity, n, text, translateLang).onSuccess { files.add(it) }
+                            2 -> {
+                                ExportManager.exportTranslatePdf(this@NoteDetailActivity, n, text, translateLang).onSuccess { files.add(it) }
+                                ExportManager.exportTranslateDocx(this@NoteDetailActivity, n, text, translateLang).onSuccess { files.add(it) }
+                            }
+                        }
+                        progress.dismiss()
+                        if (files.isNotEmpty()) {
+                            val uris = files.map { ExportManager.getFileUri(this@NoteDetailActivity, it) }
+                            val intent = if (uris.size == 1) {
+                                android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                    type = "*/*"; putExtra(android.content.Intent.EXTRA_STREAM, uris[0])
+                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                            } else {
+                                android.content.Intent(android.content.Intent.ACTION_SEND_MULTIPLE).apply {
+                                    type = "*/*"
+                                    putParcelableArrayListExtra(android.content.Intent.EXTRA_STREAM, ArrayList(uris))
+                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                            }
+                            startActivity(android.content.Intent.createChooser(intent, "Bagikan Terjemahan"))
+                        }
+                    } catch (e: Exception) {
+                        progress.dismiss()
+                        Toast.makeText(this@NoteDetailActivity, "❌ Gagal: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+            .setNegativeButton("Batal", null).show()
     }
 
     // ── Poin Kunci Panel (replaces Mindmap) ───────────────────────────────────
@@ -600,6 +649,55 @@ class NoteDetailActivity : AppCompatActivity() {
             poinKunciText = ""
             note?.let { loadPoinKunciPanel(it) }
         }
+        // Show export button
+        b.btnExportPoinKunci.isVisible = true
+        b.btnExportPoinKunci.setOnClickListener { showExportPoinKunciDialog(text) }
+    }
+
+    private fun showExportPoinKunciDialog(text: String) {
+        val n = note ?: return
+        val options = arrayOf("📄 PDF saja", "📝 Word (DOCX) saja", "📦 PDF + DOCX (keduanya)")
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Export Poin Kunci")
+            .setItems(options) { _, which ->
+                val progress = MaterialAlertDialogBuilder(this)
+                    .setMessage("⏳ Menyiapkan file...").setCancelable(false).create()
+                progress.show()
+                lifecycleScope.launch {
+                    val files = mutableListOf<java.io.File>()
+                    try {
+                        when (which) {
+                            0 -> ExportManager.exportPoinKunciPdf(this@NoteDetailActivity, n, text).onSuccess { files.add(it) }
+                            1 -> ExportManager.exportPoinKunciDocx(this@NoteDetailActivity, n, text).onSuccess { files.add(it) }
+                            2 -> {
+                                ExportManager.exportPoinKunciPdf(this@NoteDetailActivity, n, text).onSuccess { files.add(it) }
+                                ExportManager.exportPoinKunciDocx(this@NoteDetailActivity, n, text).onSuccess { files.add(it) }
+                            }
+                        }
+                        progress.dismiss()
+                        if (files.isNotEmpty()) {
+                            val uris = files.map { ExportManager.getFileUri(this@NoteDetailActivity, it) }
+                            val intent = if (uris.size == 1) {
+                                android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                    type = "*/*"; putExtra(android.content.Intent.EXTRA_STREAM, uris[0])
+                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                            } else {
+                                android.content.Intent(android.content.Intent.ACTION_SEND_MULTIPLE).apply {
+                                    type = "*/*"
+                                    putParcelableArrayListExtra(android.content.Intent.EXTRA_STREAM, ArrayList(uris))
+                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                            }
+                            startActivity(android.content.Intent.createChooser(intent, "Bagikan Poin Kunci"))
+                        }
+                    } catch (e: Exception) {
+                        progress.dismiss()
+                        Toast.makeText(this@NoteDetailActivity, "❌ Gagal: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+            .setNegativeButton("Batal", null).show()
     }
 
     // ── Audio Player (#4 fix + #5 highlight) ─────────────────────────────

@@ -212,12 +212,18 @@
                 </androidx.cardview.widget.CardView>
 
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:orientation="horizontal" android:layout_marginHorizontal="16dp"
+                    android:orientation="vertical" android:layout_marginHorizontal="16dp"
                     android:layout_marginBottom="80dp">
                     <Button android:id="@+id/btnTranslate" android:layout_width="match_parent"
                         android:layout_height="44dp" android:text="🌐 Terjemahkan"
                         android:textColor="#121212" android:textStyle="bold" android:textSize="13sp"
-                        android:backgroundTint="@color/primary_green" android:stateListAnimator="@null"/>
+                        android:backgroundTint="@color/primary_green" android:stateListAnimator="@null"
+                        android:layout_marginBottom="8dp"/>
+                    <Button android:id="@+id/btnExportTranslate" android:layout_width="match_parent"
+                        android:layout_height="40dp" android:text="⬇ Export Terjemahan"
+                        android:textColor="@color/text_secondary" android:textSize="13sp"
+                        android:backgroundTint="#1A1A2E" android:stateListAnimator="@null"
+                        android:visibility="gone"/>
                 </LinearLayout>
             </LinearLayout>
 
@@ -286,7 +292,12 @@
                     android:textColor="#121212" android:textStyle="bold" android:textSize="13sp"
                     android:backgroundTint="@color/primary_green"
                     android:stateListAnimator="@null" android:visibility="gone"
-                    android:layout_marginBottom="80dp"/>
+                    android:layout_marginBottom="8dp"/>
+                <Button android:id="@+id/btnExportPoinKunci" android:layout_width="match_parent"
+                    android:layout_height="40dp" android:text="⬇ Export Poin Kunci"
+                    android:textColor="@color/text_secondary" android:textSize="13sp"
+                    android:backgroundTint="#1A1A2E" android:stateListAnimator="@null"
+                    android:visibility="gone" android:layout_marginBottom="80dp"/>
             </LinearLayout>
 
         </LinearLayout>
