@@ -73,6 +73,11 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
             getString(R.string.error_mic_permission), Toast.LENGTH_LONG).show()
     }
 
+    // ── Upload Audio (Premium+) ──────────────────────────────────────────────
+    private val audioPicker = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri -> uri?.let { handleAudioUpload(it) } }
+
     override fun onCreateView(i: LayoutInflater, c: ViewGroup?, s: Bundle?): View {
         _b = FragmentRecordBinding.inflate(i, c, false); return b.root
     }
@@ -86,7 +91,69 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
         setupRecordButton()
         setupSaveAndClear()
         setupTranscriptEdit()
+        setupUploadAudio()
         observeVM()
+    }
+
+    // ── Upload Audio ──────────────────────────────────────────────────────────
+
+    private fun setupUploadAudio() {
+        b.btnUploadAudio.setOnClickListener {
+            val tier = com.kajian.note.utils.UserManager.getCachedTier()
+            val isLoggedIn = com.kajian.note.utils.UserManager.isLoggedIn
+            if (!isLoggedIn || tier == com.kajian.note.utils.UserManager.Tier.FREE) {
+                startActivity(android.content.Intent(requireContext(), PaywallActivity::class.java).apply {
+                    putExtra(PaywallActivity.EXTRA_REASON, PaywallActivity.REASON_EXPORT)
+                })
+                return@setOnClickListener
+            }
+            audioPicker.launch(arrayOf("audio/*"))
+        }
+    }
+
+    private fun handleAudioUpload(uri: android.net.Uri) {
+        try {
+            val resolver = requireContext().contentResolver
+            // Cek ukuran file — Groq limit ~25MB
+            var fileSize = 0L
+            resolver.query(uri, null, null, null, null)?.use { cursor ->
+                val sizeIdx = cursor.getColumnIndex(android.provider.OpenableColumns.SIZE)
+                if (cursor.moveToFirst() && sizeIdx >= 0) fileSize = cursor.getLong(sizeIdx)
+            }
+            if (fileSize > 25 * 1024 * 1024) {
+                Toast.makeText(requireContext(), "File terlalu besar (maks 25MB)", Toast.LENGTH_LONG).show()
+                return
+            }
+
+            // Ambil nama asli + ekstensi
+            var displayName = "audio_upload"
+            resolver.query(uri, null, null, null, null)?.use { cursor ->
+                val nameIdx = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                if (cursor.moveToFirst() && nameIdx >= 0) displayName = cursor.getString(nameIdx) ?: displayName
+            }
+            val ext = displayName.substringAfterLast('.', "mp3").lowercase()
+            val validExt = if (ext in listOf("mp3","wav","m4a","ogg","flac","webm","aac")) ext else "mp3"
+
+            // Copy ke cache dengan ekstensi yang benar
+            val destFile = java.io.File(requireContext().cacheDir, "upload_${System.currentTimeMillis()}.$validExt")
+            resolver.openInputStream(uri)?.use { input ->
+                destFile.outputStream().use { output -> input.copyTo(output) }
+            }
+
+            if (!destFile.exists() || destFile.length() == 0L) {
+                Toast.makeText(requireContext(), "Gagal membaca file audio", Toast.LENGTH_LONG).show()
+                return
+            }
+
+            val lang = vm.language.value ?: LanguageDetector.detectDeviceLanguage(requireContext())
+            startActivity(android.content.Intent(requireContext(), TranscribeActivity::class.java).apply {
+                putExtra(TranscribeActivity.EXTRA_WAV_PATH, destFile.absolutePath)
+                putExtra(TranscribeActivity.EXTRA_LANGUAGE, lang)
+                putExtra(TranscribeActivity.EXTRA_DURATION_MS, 0L)
+            })
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "Gagal upload: ${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
 
     // ── Chip Selector UI ───────────────────────────────────────────────────

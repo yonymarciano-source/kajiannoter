@@ -144,10 +144,19 @@ object GroqTranscriber {
         // response_format
         field("response_format", "json")
 
-        // file
+        // file — Content-Type disesuaikan dengan ekstensi (support upload mp3/m4a/ogg/dll)
+        val mimeType = when (wavFile.extension.lowercase()) {
+            "mp3"  -> "audio/mpeg"
+            "m4a"  -> "audio/mp4"
+            "ogg"  -> "audio/ogg"
+            "flac" -> "audio/flac"
+            "webm" -> "audio/webm"
+            "aac"  -> "audio/aac"
+            else   -> "audio/wav"
+        }
         out.write("--$BOUNDARY$nl".toByteArray())
         out.write("Content-Disposition: form-data; name=\"file\"; filename=\"${wavFile.name}\"$nl".toByteArray())
-        out.write("Content-Type: audio/wav$nl$nl".toByteArray())
+        out.write("Content-Type: $mimeType$nl$nl".toByteArray())
         FileInputStream(wavFile).use { it.copyTo(out) }
         out.write(nl.toByteArray())
 
