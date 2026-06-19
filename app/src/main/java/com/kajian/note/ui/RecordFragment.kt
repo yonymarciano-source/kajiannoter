@@ -251,6 +251,9 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
         }
         // Sembunyikan chip Groq jika tidak ada key
         b.chipModeGroq.visibility = if (hasGroqKey) View.VISIBLE else View.GONE
+
+        // Mode REKAM: btnSave tidak relevan — sembunyikan
+        b.btnSave.visibility = if (mode == "REKAM") View.GONE else View.VISIBLE
     }
 
     private fun setAudioChip(mode: String) {

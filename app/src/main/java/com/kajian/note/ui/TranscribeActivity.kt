@@ -12,6 +12,7 @@ import com.kajian.note.db.NoteRepository
 import com.kajian.note.model.Note
 import com.kajian.note.utils.GroqTranscriber
 import com.kajian.note.utils.PreferencesManager
+import com.kajian.note.utils.UserManager
 import com.kajian.note.utils.WavChunker
 import com.kajian.note.utils.WhisperTranscriber
 import kotlinx.coroutines.launch
@@ -259,7 +260,20 @@ class TranscribeActivity : AppCompatActivity() {
             .let { if (it.split(" ").size >= 7) "$it…" else it }
             .ifBlank { "Kajian ${SimpleDateFormat("dd MMM HH:mm", Locale.getDefault()).format(Date())}" }
 
+        // ✅ Cek limit catatan sebelum save
         val repo = NoteRepository(this)
+        val currentCount = repo.countAll()
+        val canAdd = UserManager.canAddNote(currentCount)
+        if (!canAdd) {
+            runOnUiThread {
+                startActivity(Intent(this, PaywallActivity::class.java).apply {
+                    putExtra(PaywallActivity.EXTRA_REASON, PaywallActivity.REASON_NOTE_LIMIT)
+                })
+                finish()
+            }
+            return
+        }
+
         val noteId = repo.insert(Note(
             title            = title,
             plainText        = text,
