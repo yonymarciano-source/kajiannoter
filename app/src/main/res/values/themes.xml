@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- ═══════════════════════════════════════════════════
+         KajianNote v4.1 — Theme System
+         ═══════════════════════════════════════════════════ -->
+
     <style name="Theme.KajianNote" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <item name="colorPrimary">@color/primary_green</item>
         <item name="colorPrimaryVariant">@color/primary_green_dark</item>
@@ -19,41 +24,120 @@
         <item name="colorControlNormal">@color/text_tertiary</item>
         <item name="colorControlActivated">@color/primary_green</item>
         <item name="android:fontFamily">sans-serif</item>
+
+        <!-- Global shape — 12dp lebih precision, kurang playful vs 20dp lama -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeSmall</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeMedium</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeLarge</item>
     </style>
 
+    <!-- ─── Global shape tokens ─── -->
+    <style name="ShapeSmall" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerRadius">8dp</item>
+    </style>
+
+    <style name="ShapeMedium" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerRadius">12dp</item>
+    </style>
+
+    <style name="ShapeLarge" parent="ShapeAppearance.MaterialComponents.LargeComponent">
+        <item name="cornerRadius">16dp</item>
+    </style>
+
+    <!-- ─── Splash ─── -->
     <style name="Theme.KajianNote.Splash" parent="Theme.KajianNote">
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowContentOverlay">@null</item>
     </style>
 
+    <!-- ─── Tab text — lebih compact, precision ─── -->
     <style name="TabTextStyle" parent="TextAppearance.Design.Tab">
         <item name="android:textSize">12sp</item>
         <item name="textAllCaps">false</item>
-        <item name="android:letterSpacing">0.02</item>
+        <item name="android:letterSpacing">0.04</item>  <!-- Sedikit lebih spaced = refined -->
+        <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 
+    <!-- ─── Buttons ─── -->
     <style name="ActionBtnPrimary" parent="Widget.MaterialComponents.Button">
         <item name="backgroundTint">@color/primary_green</item>
         <item name="android:textColor">@color/bg_dark</item>
         <item name="android:textSize">14sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="cornerRadius">14dp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="cornerRadius">10dp</item>           <!-- 14→10dp: lebih precision -->
         <item name="android:stateListAnimator">@null</item>
-        <item name="android:letterSpacing">0.02</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
     </style>
 
     <style name="ActionBtnSecondary" parent="Widget.MaterialComponents.Button.OutlinedButton">
-        <item name="strokeColor">@color/surface_variant</item>
-        <item name="backgroundTint">@color/surface_elevated</item>
+        <item name="strokeColor">@color/divider</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="backgroundTint">@color/surface_variant</item>
         <item name="android:textColor">@color/text_secondary</item>
         <item name="android:textSize">14sp</item>
-        <item name="cornerRadius">14dp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="cornerRadius">10dp</item>
         <item name="android:stateListAnimator">@null</item>
     </style>
 
+    <!-- ─── Cards ─── -->
     <style name="CardStyle" parent="">
-        <item name="cardCornerRadius">20dp</item>
+        <item name="cardCornerRadius">12dp</item>       <!-- 20→12dp: presisi, tidak bulat -->
         <item name="cardElevation">0dp</item>
         <item name="cardBackgroundColor">@color/surface_dark</item>
     </style>
+
+    <!-- Card slightly elevated (for record panel, etc) -->
+    <style name="CardStyleElevated" parent="CardStyle">
+        <item name="cardBackgroundColor">@color/surface_variant</item>
+        <item name="cardCornerRadius">16dp</item>
+    </style>
+
+    <!-- ─── Typography styles ─── -->
+    <style name="TextTitle" parent="">
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:lineSpacingMultiplier">1.3</item>
+    </style>
+
+    <style name="TextBody" parent="">
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:lineSpacingMultiplier">1.5</item>
+    </style>
+
+    <style name="TextMeta" parent="">
+        <item name="android:textSize">11sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+        <item name="android:letterSpacing">0.03</item>
+    </style>
+
+    <style name="TextLabel" parent="">
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+
+    <!-- ─── Tier badge — outline style, lebih subtle ─── -->
+    <style name="TierBadgeFree" parent="">
+        <item name="android:textSize">10sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/tier_free</item>
+        <item name="android:letterSpacing">0.06</item>
+    </style>
+
+    <style name="TierBadgePremium" parent="TierBadgeFree">
+        <item name="android:textColor">@color/tier_premium</item>
+    </style>
+
+    <style name="TierBadgeSubscriber" parent="TierBadgeFree">
+        <item name="android:textColor">@color/tier_subscriber</item>
+    </style>
+
 </resources>

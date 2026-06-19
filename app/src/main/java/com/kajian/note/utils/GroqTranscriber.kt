@@ -128,17 +128,8 @@ object GroqTranscriber {
         // language — null = auto detect oleh Whisper
         if (langCode != null) field("language", langCode)
 
-        // prompt — bantu Whisper kenali istilah Arab/Islam + tulis Arab asli
-        val prompt = when (langCode) {
-            "id" -> "Kajian Islam. Istilah: Alhamdulillah, Subhanallah, Allahu Akbar, Bismillah, " +
-                    "Insya Allah, Astaghfirullah, Assalamu'alaikum, Al-Qur'an, Hadits, Sunnah, " +
-                    "sholat, zakat, puasa, haji, Rasulullah ﷺ, taqwa, ikhlas, syukur."
-            "ar" -> "بسم الله الرحمن الرحيم. الحمد لله، سبحان الله، الله أكبر، أستغفر الله، " +
-                    "إن شاء الله، القرآن الكريم، الحديث النبوي، السنة، الصلاة، الزكاة."
-            null -> "Islamic study. Alhamdulillah, Subhanallah, Allahu Akbar, Bismillah, " +
-                    "Al-Qur'an, Hadith, الحمد لله، سبحان الله، بسم الله، إن شاء الله، الله أكبر."
-            else -> "Alhamdulillah, Subhanallah, Allahu Akbar, Bismillah, Al-Qur'an, Hadith."
-        }
+        // prompt — dari IslamicVocabularyProvider, kaya istilah domain-spesifik
+        val prompt = IslamicVocabularyProvider.groqPromptHint(langCode)
         field("prompt", prompt)
 
         // response_format

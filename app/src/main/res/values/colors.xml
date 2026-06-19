@@ -1,48 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- v4.0 Islami Palette — Teal + Deep Navy + Warm Gold -->
-    <color name="primary_green">#00BFA5</color>        <!-- Teal islami -->
-    <color name="primary_green_dark">#00897B</color>
-    <color name="primary_green_light">#B2DFDB</color>
+    <!-- ═══════════════════════════════════════════════════
+         KajianNote v4.1 — Premium Design System
+         Personality: Intelligent · Organized · Calm · Focused
+         Reference: Linear + Notion + Apple Notes + Readwise
+         ═══════════════════════════════════════════════════ -->
+
+    <!-- Primary accent — sage green (tetap Islami, tapi desaturated & calmer) -->
+    <color name="primary_green">#3ECF8E</color>
+    <color name="primary_green_dark">#29A874</color>
+    <color name="primary_green_light">#D1F5E5</color>
+
+    <!-- State colors -->
     <color name="recording_red">#EF5350</color>
-    <color name="accent_blue">#5C6BC0</color>           <!-- Indigo -->
-    <color name="accent_gold">#FFB300</color>           <!-- Gold aksen -->
+    <color name="accent_gold">#D4A847</color>         <!-- warm gold, lebih muted -->
 
-    <!-- Backgrounds — deep navy -->
-    <color name="bg_dark">#0B0F1C</color>
-    <color name="surface_dark">#131929</color>
-    <color name="surface_variant">#1C2438</color>
-    <color name="surface_elevated">#212B42</color>
-    <color name="hint_bg">#141E30</color>
+    <!-- ─── Backgrounds — near-black (Linear-inspired) ─── -->
+    <color name="bg_dark">#0D0D0D</color>              <!-- True near-black, bukan navy -->
+    <color name="surface_dark">#161616</color>          <!-- Card surface -->
+    <color name="surface_variant">#1E1E1E</color>       <!-- Elevated surface -->
+    <color name="surface_elevated">#252525</color>      <!-- Hover / pressed state -->
+    <color name="hint_bg">#1A1A1A</color>
 
-    <!-- Text -->
-    <color name="text_primary">#EEF2FF</color>
-    <color name="text_secondary">#8B9BBF</color>
-    <color name="text_tertiary">#3D4B6E</color>
+    <!-- ─── Text — neutral, tidak cold-blue ─── -->
+    <color name="text_primary">#F4F4F5</color>          <!-- Sedikit warm, tidak pure white -->
+    <color name="text_secondary">#A1A1AA</color>        <!-- True neutral grey -->
+    <color name="text_tertiary">#52525B</color>         <!-- Subtle placeholder -->
 
-    <!-- Misc -->
+    <!-- ─── Misc ─── -->
     <color name="white">#FFFFFF</color>
-    <color name="divider">#1C2438</color>
-    <color name="speaker_a">#5C6BC0</color>
-    <color name="speaker_b">#00BFA5</color>
-    <color name="speaker_c">#FF7043</color>
-    <color name="speaker_d">#AB47BC</color>
+    <color name="divider">#242424</color>               <!-- Subtle, hampir invisible -->
+    <color name="accent_blue">#6366F1</color>           <!-- Indigo modern (bukan crypto-blue) -->
 
-    <!-- Material theme -->
-    <color name="colorPrimary">#00BFA5</color>
-    <color name="colorPrimaryVariant">#00897B</color>
-    <color name="colorOnPrimary">#0B0F1C</color>
-    <color name="colorSecondary">#5C6BC0</color>
+    <!-- ─── Speaker colors — lebih muted ─── -->
+    <color name="speaker_a">#6366F1</color>             <!-- Indigo -->
+    <color name="speaker_b">#3ECF8E</color>             <!-- Sage green -->
+    <color name="speaker_c">#F97316</color>             <!-- Amber orange -->
+    <color name="speaker_d">#A855F7</color>             <!-- Soft purple -->
+
+    <!-- ─── Material theme tokens ─── -->
+    <color name="colorPrimary">#3ECF8E</color>
+    <color name="colorPrimaryVariant">#29A874</color>
+    <color name="colorOnPrimary">#0D0D0D</color>
+    <color name="colorSecondary">#6366F1</color>
     <color name="colorOnSecondary">#FFFFFF</color>
-    <color name="colorSurface">#131929</color>
-    <color name="colorOnSurface">#EEF2FF</color>
-    <color name="colorBackground">#0B0F1C</color>
-    <color name="colorOnBackground">#EEF2FF</color>
-    <color name="colorError">#EF5350</color>
+    <color name="colorSurface">#161616</color>
+    <color name="colorOnSurface">#F4F4F5</color>
+    <color name="colorBackground">#0D0D0D</color>
+    <color name="colorOnBackground">#F4F4F5</color>
+    <color name="colorError">#EF4444</color>
     <color name="colorOnError">#FFFFFF</color>
 
-    <!-- Premium badges -->
-    <color name="tier_free">#3D4B6E</color>
-    <color name="tier_premium">#FFB300</color>
-    <color name="tier_subscriber">#5C6BC0</color>
+    <!-- ─── Tier badges — outline style lebih subtle ─── -->
+    <color name="tier_free">#3F3F46</color>             <!-- Zinc-600 -->
+    <color name="tier_premium">#D4A847</color>          <!-- Warm gold -->
+    <color name="tier_subscriber">#6366F1</color>       <!-- Indigo -->
 </resources>
