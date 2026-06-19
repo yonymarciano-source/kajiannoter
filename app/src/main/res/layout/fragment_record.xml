@@ -25,7 +25,7 @@
                         android:text="🌐" android:textSize="13sp" android:layout_marginEnd="6dp"/>
                     <TextView android:layout_width="0dp" android:layout_height="wrap_content"
                         android:layout_weight="1" android:text="Bahasa"
-                        @color/text_secondary" android:textSize="12sp" android:textStyle="bold"
+                        android:textColor="@color/text_secondary" android:textSize="12sp" android:textStyle="bold"
                         android:letterSpacing="0.04"/>
                     <Button android:id="@+id/btnInfoLang"
                         android:layout_width="20dp" android:layout_height="20dp"
@@ -85,7 +85,7 @@
                         android:text="🎙" android:textSize="13sp" android:layout_marginEnd="6dp"/>
                     <TextView android:layout_width="0dp" android:layout_height="wrap_content"
                         android:layout_weight="1" android:text="Mode Rekam"
-                        @color/text_secondary" android:textSize="12sp" android:textStyle="bold"/>
+                        android:textColor="@color/text_secondary" android:textSize="12sp" android:textStyle="bold"/>
                     <Button android:id="@+id/btnInfoMode"
                         android:layout_width="20dp" android:layout_height="20dp"
                         android:text="i" android:textSize="10sp" android:textStyle="italic"
@@ -139,7 +139,7 @@
                         android:text="🔊" android:textSize="13sp" android:layout_marginEnd="6dp"/>
                     <TextView android:layout_width="0dp" android:layout_height="wrap_content"
                         android:layout_weight="1" android:text="Sumber Audio"
-                        @color/text_secondary" android:textSize="12sp" android:textStyle="bold"/>
+                        android:textColor="@color/text_secondary" android:textSize="12sp" android:textStyle="bold"/>
                     <Button android:id="@+id/btnInfoAudio"
                         android:layout_width="20dp" android:layout_height="20dp"
                         android:text="i" android:textSize="10sp" android:textStyle="italic"
