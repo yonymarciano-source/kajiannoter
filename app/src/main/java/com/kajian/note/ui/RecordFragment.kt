@@ -540,7 +540,9 @@ class RecordFragment : Fragment(), SpeechHelper.Callback {
             override fun afterTextChanged(s: Editable?) {
                 val words = s?.trim()?.split("\\s+".toRegex())?.filter { it.isNotEmpty() }?.size ?: 0
                 b.tvWordCount.text = "$words ${getString(R.string.words)}"
-                b.btnSave.isEnabled = s?.isNotBlank() == true && vm.isRecording.value != true
+                // Mode REKAM: btnSave tidak dipakai (langsung buka TranscribeActivity)
+                val isRekamMode = prefs.getRecordMode() == "REKAM"
+                b.btnSave.isEnabled = s?.isNotBlank() == true && vm.isRecording.value != true && !isRekamMode
             }
             override fun beforeTextChanged(s: CharSequence?, a: Int, b2: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b2: Int, c: Int) {}
