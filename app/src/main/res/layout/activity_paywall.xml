@@ -60,7 +60,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
             app:cardBackgroundColor="@color/surface_dark"
-            app:cardCornerRadius="20dp"
+            app:cardCornerRadius="12dp"
             app:cardElevation="0dp">
 
             <LinearLayout
@@ -128,7 +128,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             app:cardBackgroundColor="@color/surface_elevated"
-            app:cardCornerRadius="20dp"
+            app:cardCornerRadius="12dp"
             app:cardElevation="0dp">
 
             <LinearLayout
@@ -240,7 +240,7 @@
                     android:text="📋 Salin Info Rekening"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp"
-                    android:backgroundTint="#1A1A2E"
+                    android:backgroundTint="@color/surface_variant"
                     android:stateListAnimator="@null"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -250,7 +250,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            app:cardBackgroundColor="#332A1A00"
+            app:cardBackgroundColor="@color/surface_variant"
             app:cardCornerRadius="12dp"
             app:cardElevation="0dp">
             <LinearLayout
@@ -262,7 +262,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="⚠️ Penting"
-                    android:textColor="#FFC107"
+                    android:textColor="@color/accent_gold"
                     android:textSize="13sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="4dp"/>

@@ -22,7 +22,7 @@
             android:visibility="gone"
             app:cardCornerRadius="16dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="#1A1A2E">
+            app:cardBackgroundColor="@color/surface_variant">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -65,7 +65,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
-            app:cardCornerRadius="20dp"
+            app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
             app:cardBackgroundColor="@color/surface_dark">
 
@@ -80,7 +80,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="👥 Jumlah Speaker"
-                    android:textColor="#888888"
+                    @color/text_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.04"
@@ -155,7 +155,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="🏷️ Label Speaker (opsional)"
-                    android:textColor="#888888"
+                    @color/text_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.04"
@@ -173,7 +173,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="🌐 Bahasa Audio"
-                    android:textColor="#888888"
+                    @color/text_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.04"
@@ -257,7 +257,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
-            app:cardCornerRadius="20dp"
+            app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
             app:cardBackgroundColor="@color/surface_dark">
 
@@ -318,7 +318,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
-            app:cardCornerRadius="20dp"
+            app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
             app:cardBackgroundColor="@color/surface_dark">
 
@@ -332,7 +332,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="🎙️ Transkripsi per Speaker"
-                    android:textColor="#888888"
+                    @color/text_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.04"

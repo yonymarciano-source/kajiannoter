@@ -27,7 +27,7 @@
         style="@style/Widget.AppCompat.ProgressBar.Horizontal"
         android:layout_width="match_parent" android:layout_height="8dp"
         android:progressTint="@color/primary_green"
-        android:progressBackgroundTint="#1E2436"
+        android:progressBackgroundTint="@color/divider"
         android:max="100" android:layout_marginBottom="14dp"
         android:visibility="gone"/>
 
