@@ -146,9 +146,8 @@ object AssemblyAITranscriber {
             // Auto (maxSpeakers == 0) → tidak set speakers_expected sama sekali
             // Biarkan AssemblyAI deteksi jumlah speaker sendiri tanpa constraint
 
-            // ✅ Word boost — bias model ke istilah Islam/Arab/nama ustadz
-            put("word_boost", org.json.JSONArray(IslamicVocabularyProvider.wordBoostList))
-            put("boost_param", "high")  // default=default, bisa "low"/"high"
+            // ✅ Keyterms prompt — universal-3-pro pakai keyterms_prompt, bukan word_boost
+            put("keyterms_prompt", IslamicVocabularyProvider.wordBoostList.take(100).joinToString(", "))
         }
 
         val requestBody = bodyJson.toString()
