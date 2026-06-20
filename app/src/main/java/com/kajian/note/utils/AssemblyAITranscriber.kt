@@ -146,8 +146,8 @@ object AssemblyAITranscriber {
             // Auto (maxSpeakers == 0) → tidak set speakers_expected sama sekali
             // Biarkan AssemblyAI deteksi jumlah speaker sendiri tanpa constraint
 
-            // ✅ Keyterms prompt — universal-3-pro pakai keyterms_prompt, bukan word_boost
-            put("keyterms_prompt", IslamicVocabularyProvider.wordBoostList.take(100).joinToString(", "))
+            // ✅ Keyterms prompt — universal-3-pro, harus JSON array of strings
+            put("keyterms_prompt", org.json.JSONArray(IslamicVocabularyProvider.wordBoostList.take(100)))
         }
 
         val requestBody = bodyJson.toString()
