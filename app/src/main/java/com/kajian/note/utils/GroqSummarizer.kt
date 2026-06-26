@@ -266,7 +266,7 @@ object GroqSummarizer {
         try {
             // ── Chunking per ~800 kata ──────────────────────────────────────────
             val CHUNK_WORDS = 800
-            val words = plainText.trim().split("\s+".toRegex()).filter { it.isNotEmpty() }
+            val words = plainText.trim().split("\\s+".toRegex()).filter { it.isNotEmpty() }
             val chunks = mutableListOf<String>()
             var idx = 0
             while (idx < words.size) {
