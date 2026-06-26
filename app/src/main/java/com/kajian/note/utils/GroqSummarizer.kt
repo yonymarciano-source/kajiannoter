@@ -257,51 +257,76 @@ object GroqSummarizer {
     suspend fun translate(
         ctx: Context,
         plainText: String,
-        targetLang: String = "id"
+        targetLang: String = "id",
+        onProgress: ((current: Int, total: Int) -> Unit)? = null
     ): Result<String> = withContext(Dispatchers.IO) {
         val apiKey = GroqTranscriber.getApiKey(ctx)
         if (apiKey.isBlank()) return@withContext Result.failure(Exception("NO_KEY"))
 
         try {
-            val truncated = if (plainText.length > 6000) plainText.take(6000) + "\n...[terpotong]" else plainText
-            val (systemPrompt, userPrompt) = when (targetLang) {
-                "en" -> Pair(
-                    "You are a professional translator. Translate the following Islamic study transcript to English. Preserve Arabic terms (Quran, hadith, Islamic terminology). Output only the translation, no commentary.",
-                    "Translate to English:\n\n$truncated"
-                )
-                else -> Pair(
-                    "Kamu adalah penerjemah profesional. Terjemahkan transkripsi kajian Islam berikut ke Bahasa Indonesia yang baik dan benar. Pertahankan istilah Arab (Al-Qur\'an, hadits, istilah Islam). Output hanya terjemahan, tanpa komentar.",
-                    "Terjemahkan ke Bahasa Indonesia:\n\n$truncated"
-                )
+            // ── Chunking per ~800 kata ──────────────────────────────────────────
+            val CHUNK_WORDS = 800
+            val words = plainText.trim().split("\s+".toRegex()).filter { it.isNotEmpty() }
+            val chunks = mutableListOf<String>()
+            var idx = 0
+            while (idx < words.size) {
+                val endIdx = minOf(idx + CHUNK_WORDS, words.size)
+                chunks.add(words.subList(idx, endIdx).joinToString(" "))
+                idx = endIdx
             }
 
-            val requestBody = JSONObject().apply {
-                put("model", MODEL)
-                put("max_tokens", 2048)
-                put("temperature", 0.2)
-                put("messages", JSONArray().apply {
-                    put(JSONObject().apply { put("role", "system"); put("content", systemPrompt) })
-                    put(JSONObject().apply { put("role", "user"); put("content", userPrompt) })
-                })
+            val systemPrompt = when (targetLang) {
+                "en" -> "You are a professional translator. Translate the following Islamic study transcript chunk to English. Preserve Arabic terms (Quran, hadith, Islamic terminology). Output ONLY the translation, no commentary, no explanation."
+                else -> "Kamu adalah penerjemah profesional. Terjemahkan bagian transkripsi kajian Islam berikut ke Bahasa Indonesia yang baik dan benar. Pertahankan istilah Arab (Al-Qur\'an, hadits, istilah Islam). Output HANYA terjemahan saja, tanpa komentar atau penjelasan apapun."
             }
 
-            val conn = URL(GROQ_URL).openConnection() as HttpURLConnection
-            conn.apply {
-                requestMethod = "POST"
-                setRequestProperty("Authorization", "Bearer $apiKey")
-                setRequestProperty("Content-Type", "application/json")
-                doOutput = true; connectTimeout = 30_000; readTimeout = 90_000
+            val results = mutableListOf<String>()
+
+            for ((chunkIndex, chunk) in chunks.withIndex()) {
+                onProgress?.invoke(chunkIndex + 1, chunks.size)
+
+                val userPrompt = when (targetLang) {
+                    "en" -> "Translate to English:\n\n$chunk"
+                    else -> "Terjemahkan ke Bahasa Indonesia:\n\n$chunk"
+                }
+
+                val requestBody = JSONObject().apply {
+                    put("model", MODEL)
+                    put("max_tokens", 4096)
+                    put("temperature", 0.2)
+                    put("messages", JSONArray().apply {
+                        put(JSONObject().apply { put("role", "system"); put("content", systemPrompt) })
+                        put(JSONObject().apply { put("role", "user"); put("content", userPrompt) })
+                    })
+                }
+
+                val conn = URL(GROQ_URL).openConnection() as HttpURLConnection
+                conn.apply {
+                    requestMethod = "POST"
+                    setRequestProperty("Authorization", "Bearer $apiKey")
+                    setRequestProperty("Content-Type", "application/json")
+                    doOutput = true; connectTimeout = 30_000; readTimeout = 90_000
+                }
+                OutputStreamWriter(conn.outputStream, "UTF-8").use { it.write(requestBody.toString()) }
+
+                val code = conn.responseCode
+                if (code != 200) {
+                    Log.e(TAG, "translate chunk ${chunkIndex + 1} HTTP $code")
+                    return@withContext Result.failure(Exception("HTTP $code pada bagian ${chunkIndex + 1}"))
+                }
+
+                val chunkResult = JSONObject(conn.inputStream.bufferedReader().readText())
+                    .getJSONArray("choices").getJSONObject(0)
+                    .getJSONObject("message").getString("content").trim()
+
+                results.add(chunkResult)
+
+                // Jeda 300ms antar chunk — hindari rate limit
+                if (chunkIndex < chunks.size - 1) Thread.sleep(300)
             }
-            OutputStreamWriter(conn.outputStream, "UTF-8").use { it.write(requestBody.toString()) }
 
-            val code = conn.responseCode
-            if (code != 200) return@withContext Result.failure(Exception("HTTP $code"))
+            Result.success(results.joinToString("\n\n"))
 
-            val content = JSONObject(conn.inputStream.bufferedReader().readText())
-                .getJSONArray("choices").getJSONObject(0)
-                .getJSONObject("message").getString("content").trim()
-
-            Result.success(content)
         } catch (e: Exception) {
             Log.e(TAG, "translate error: ${e.message}", e)
             Result.failure(e)

@@ -470,14 +470,21 @@ class NoteDetailActivity : AppCompatActivity() {
     private fun doTranslate(n: Note) {
         b.btnTranslate.isEnabled = false
         b.tvTranslateEmpty.isVisible = true
-        b.tvTranslateEmpty.text = "⏳ Menerjemahkan via Groq AI..."
+        b.tvTranslateEmpty.text = "⏳ Menerjemahkan... (bagian 1)"
         b.cardTranslateContent.isVisible = false
 
         lifecycleScope.launch {
             val result = GroqSummarizer.translate(
                 ctx = this@NoteDetailActivity,
                 plainText = n.plainText,
-                targetLang = translateLang
+                targetLang = translateLang,
+                onProgress = { current, total ->
+                    runOnUiThread {
+                        b.tvTranslateEmpty.text =
+                            if (total == 1) "⏳ Menerjemahkan via Groq AI..."
+                            else "⏳ Menerjemahkan bagian $current dari $total..."
+                    }
+                }
             )
             b.btnTranslate.isEnabled = true
             result.onSuccess { text ->
